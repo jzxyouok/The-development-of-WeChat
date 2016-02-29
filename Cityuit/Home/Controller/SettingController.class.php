@@ -40,28 +40,28 @@ class SettingController extends Controller {
                     "sub_button" => array (
                         0 => array (
                             "type" => "click",
-                            "name" => "自习室",
-                            "key" => "B1-1"
+                            "name" => "图书馆",
+                            "key" => "library"
                         ),
                         1 => array (
                             "type" => "click",
-                            "name" => "图书馆",
-                            "key" => "B1-2"
+                            "name" => "考试时间",
+                            "key" => "exam"
                         ),
                         2 => array (
                             "type" => "click",
-                            "name" => "考试查询",
-                            "key" => "B1-3"
+                            "name" => "期末成绩",
+                            "key" => "score"
                         ),
                         3 => array (
                             "type" => "click",
-                            "name" => "成绩查询",
-                            "key" => "B1-4"
+                            "name" => "明日课表",
+                            "key" => "tomorrow"
                         ),
                         4 => array (
                             "type" => "click",
-                            "name" => "我是课表",
-                            "key" => "B1-5"
+                            "name" => "今日课表",
+                            "key" => "today"
                         ),
                     ),
                 ),
@@ -70,28 +70,28 @@ class SettingController extends Controller {
                     "sub_button" => array (
                         0 => array (
                             "type" => "click",
-                            "name" => "校园墙",
-                            "key" => "B2-1"
+                            "name" => "表白墙",
+                            "key" => "wall"
                         ),
                         1 => array (
                             "type" => "click",
                             "name" => "寻物平台",
-                            "key" => "B2-2"
+                            "key" => "lost"
                         ),
                         2 => array (
                             "type" => "click",
                             "name" => "快递查询",
-                            "key" => "B2-3"
+                            "key" => "express"
                         ),
                         3 => array (
                             "type" => "click",
-                            "name" => "放假安排",
-                            "key" => "B2-4"
+                            "name" => "自习教室",
+                            "key" => "classroom"
                         ),
                         4 => array (
                             "type" => "click",
                             "name" => "食堂菜单",
-                            "key" => "B2-5"
+                            "key" => "canteen"
                         ),
                     ),
                 ),
@@ -101,27 +101,27 @@ class SettingController extends Controller {
                         0 => array (
                             "type" => "click",
                             "name" => "饭卡挂失",
-                            "key" => "B3-1"
+                            "key" => "loss"
                         ),
                         1 => array (
                             "type" => "click",
                             "name" => "指南联系",
-                            "key" => "B3-2"
+                            "key" => "contact"
                         ),
                         2 => array (
                             "type" => "click",
                             "name" => "城院盒子",
-                            "key" => "B3-3"
+                            "key" => "box"
                         ),
                         3 => array (
                             "type" => "click",
                             "name" => "关于我们",
-                            "key" => "B3-4"
+                            "key" => "about"
                         ),
                         4 => array (
                             "type" => "click",
                             "name" => "解除绑定",
-                            "key" => "B3-5"
+                            "key" => "unbind"
                         ),
                     ),
                 ),

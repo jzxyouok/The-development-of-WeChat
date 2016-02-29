@@ -31,10 +31,21 @@ $(document).ready(function(){
             },
             function(data,status){
               if(data == 'success'){
-                  alert('成功');
+                document.getElementById("success-show").style.display="";//显示
+                document.getElementById("p-show").style.display="none";//
+                document.getElementById("error-show").style.display="none";//
+                document.getElementById("al-show").style.display="none";//
               }else if(data == 'error'){
                 //$("#waring-show").style.visibility="visible";//显示
-                document.getElementById("waring-show").style.visibility="visible";//显示
+                document.getElementById("success-show").style.display="none";//
+                document.getElementById("p-show").style.display="none";//
+                document.getElementById("error-show").style.display="";//
+                document.getElementById("al-show").style.display="none";//
+              }else if(data == "al"){
+                document.getElementById("success-show").style.display="none";//
+                document.getElementById("p-show").style.display="none";//
+                document.getElementById("error-show").style.display="none";//
+                document.getElementById("al-show").style.display="";//
               }
             });
           return false;
@@ -58,8 +69,17 @@ $(document).ready(function(){
   <!-- <form action="__URL__/doLogin" type="post" class="form-signin" > -->
   <form class="form-signin" >
     <img src="__PUBLIC__/Image/logo.png" class="img-responsive center-block" alt="大连理工大学城市学院">
-    <div class="form-waring" style="visibility:hidden;" id="waring-show" >
+    <div class="form-waring" style="visibility:hidden;" id="p-show" >
+      <p></p>
+    </div>
+    <div class="form-waring" style="display: none;" id="error-show" >
       <p>学号或密码错误</p>
+    </div>
+    <div class="form-waring" style="display: none;" id="success-show" >
+      <p>绑定成功</p>
+    </div>
+    <div class="form-waring" style="display: none;" id="al-show" >
+      <p>您已经绑定成功</p>
     </div>
     <label for="inputText" class="sr-only">学号</label>
     <input name="studentno" id="inputText" class="form-control" placeholder="学号" required="" autofocus="" type="text">

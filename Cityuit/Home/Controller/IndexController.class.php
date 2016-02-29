@@ -47,22 +47,23 @@ class IndexController extends Controller {
                         //自定义菜单按钮
                         $eventKey = $weChat->getRevEventKey();
                         switch ($eventKey) {
-                            case "B1-1":
-                                $weChat->text("自习室")->reply();
-                                break;
-                            case "B1-2":
+                            case "library":
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
                                 $weChat->text($id)->reply();
                                 break;
-                            case "B1-3":
+                            case "exam":
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
                                 $weChat->text($id)->reply();
                                 break;
-                            case "B1-4":
+                            case "score":
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
                                 $weChat->text($id)->reply();
                                 break;
-                            case "B1-5":
+                            case "tomorrow":
+                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
+                                $weChat->text($id)->reply();
+                                break;
+                            case "today":
                                 /* $weChat->text("我是课表")->reply(); */
                                 /* $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //实例化Login控制器调用方法 */
                                 $class = array(
@@ -78,34 +79,34 @@ class IndexController extends Controller {
                                  );
                                 $weChat->news($class)->reply();
                                 break;
-                            case "B2-1":
-                                $weChat->text("校园墙")->reply();
+                            case "wall":
+                                $weChat->text("表白墙")->reply();
                                 break;
-                            case "B2-2":
+                            case "lost":
                                 $weChat->text("寻物平台")->reply();
                                 break;
-                            case "B2-3":
+                            case "express":
                                 $weChat->text("快递查询")->reply();
                                 break;
-                            case "B2-4":
-                                $weChat->text("放假安排")->reply();
+                            case "classroom":
+                                $weChat->text("自习教室")->reply();
                                 break;
-                            case "B2-5":
+                            case "canteen":
                                 $weChat->text("食堂菜单")->reply();
                                 break;
-                            case "B3-1":
+                            case "loss":
                                 $weChat->text("饭卡挂失")->reply();
                                 break;
-                            case "B3-2":
+                            case "contact":
                                 $weChat->text("指南联系")->reply();
                                 break;
-                            case "B3-3":
+                            case "box":
                                 $weChat->text("城院盒子")->reply();
                                 break;
-                            case "B3-4":
+                            case "about":
                                 $weChat->text("关于我们")->reply();
                                 break;
-                            case "B3-5":
+                            case "unbind":
                                 $weChat->text("解除绑定")->reply();
                                 break;
                             default:
