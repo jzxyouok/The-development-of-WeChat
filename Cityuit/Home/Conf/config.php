@@ -1,0 +1,30 @@
+<?php
+return array(
+    //'配置项'=>'配置值'
+    'TMPL_L_DELIM'=>'<{', //左模版标签
+    'TMPL_R_DELIM'=>'}>', //右模版标签
+
+    'URL_ROUTER_ON'   => true, //开启路由
+    'URL_ROUTE_RULES' => array( //定义路由规则 
+        'Index/:id\d$'    => 'Index/read',
+        'Index/:name$'    => 'Index/read',
+        'Index/:year\d/:month\d'  => 'Index/archive',
+        /* '/^Index\/(\d+)$/' => 'Index/read?id=:1', */
+        /* '/^Index\/(\w+)$/' => 'Index/read?name=:1', */
+        /* '/^Index\/(\d{4})\/(\d{2})$/' => 'Index/archive?year=:1&month=:2', */
+    ),
+
+    //数据库配置信息 thinkPHP默认支持sae云
+    'db_prefix' => 'tp_', // 数据库表前缀 
+    'db_charset'=> 'utf8', // 字符集
+    'db_debug'  =>  true, // 数据库调试模式 开启后可以记录sql日志
+
+    //设置默认缓存类型 默认支持sae Memcachesae
+    //使用方法：S('name',$value,$time)
+    'DATA_CACHE_TIME'       =>  7200,      // 数据缓存有效期默认7200秒 0表示永久缓存
+
+    /* 'SHOW_PAGE_TRACE' => true, //开启事务查看 */ 
+    /* 必须关闭才能通过微信接口验证 */
+
+    /* 'WEB_HOST' => 'http://2.cityuit.sinaapp.com' */
+);
