@@ -21,38 +21,46 @@
 <script type="text/javascript">
 $(document).ready(function(){
     $("button").click(function(){
-        var studentno = $("#inputText").val();
-        var password = $("#inputPassword").val();
-        if(studentno.length != 0 && studentno != "" && password.length != 0 && password != ""){
-          $.post("__URL__/doLogin",
-            {
-                'studentno':studentno,
-                'password':password
-            },
-            function(data,status){
-              if(data == 'success'){
-                document.getElementById("success-show").style.display="";//显示
-                document.getElementById("p-show").style.display="none";//
-                document.getElementById("error-show").style.display="none";//
-                document.getElementById("al-show").style.display="none";//
-              }else if(data == 'error'){
-                //$("#waring-show").style.visibility="visible";//显示
-                document.getElementById("success-show").style.display="none";//
-                document.getElementById("p-show").style.display="none";//
-                document.getElementById("error-show").style.display="";//
-                document.getElementById("al-show").style.display="none";//
-              }else if(data == "al"){
-                document.getElementById("success-show").style.display="none";//
-                document.getElementById("p-show").style.display="none";//
-                document.getElementById("error-show").style.display="none";//
-                document.getElementById("al-show").style.display="";//
-              }
-            });
-          return false;
-        }
-      });
-
-    });
+      var studentno = $("#inputText").val();
+      var password = $("#inputPassword").val();
+      if(studentno.length != 0 && studentno != "" && password.length != 0 && password != ""){
+      $.post("__URL__/doLogin",
+        {
+        'studentno':studentno,
+        'password':password
+        },
+        function(data,status){
+        alert(data);
+            if(data == 'success'){
+                $("#success-show").css("display", "");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "none");
+                $("#al-show").css("display", "none");
+                $("#school-show").css("display", "none");
+            }else if(data == 'error'){
+                $("#success-show").css("display", "none");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "");
+                $("#al-show").css("display", "none");
+                $("#school-show").css("display", "none");
+            }else if(data == "al"){
+                $("#success-show").css("display", "none");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "none");
+                $("#al-show").css("display", "");
+                $("#school-show").css("display", "none");
+            }else if(data == "school"){
+                $("#success-show").css("display", "none");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "none");
+                $("#al-show").css("display", "none");
+                $("#school-show").css("display", "");
+            }
+        });
+      return false;
+      }
+});    
+});
 </script>
 <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
 <!--[if lt IE 9]>
@@ -81,6 +89,10 @@ $(document).ready(function(){
     <div class="form-waring" style="display: none;" id="al-show" >
       <p>您已经绑定成功</p>
     </div>
+    <div class="form-waring" style="display: none;" id="school-show" >
+      <p>校网又崩了，稍后绑定</p>
+    </div>
+    <input type="hidden" name="openid" value="<{$openid}>"/>
     <label for="inputText" class="sr-only">学号</label>
     <input name="studentno" id="inputText" class="form-control" placeholder="学号" required="" autofocus="" type="text">
     <label for="inputPassword" class="sr-only">密码</label>
@@ -102,7 +114,6 @@ $(document).ready(function(){
 <script type="text/javascript">
 (function () {
  'use strict';
-
  if (navigator.userAgent.match(/IEMobile\/10\.0/)) {
  var msViewportStyle = document.createElement('style')
  msViewportStyle.appendChild(
@@ -112,7 +123,6 @@ $(document).ready(function(){
    )
  document.querySelector('head').appendChild(msViewportStyle)
  }
-
  })();
 </script>
 

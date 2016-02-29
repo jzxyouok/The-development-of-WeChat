@@ -97,8 +97,8 @@ class IndexController extends Controller {
                             case "loss":
                                 $weChat->text("饭卡挂失")->reply();
                                 break;
-                            case "contact":
-                                $weChat->text("指南联系")->reply();
+                            case "change":
+                                $weChat->text("更改密码")->reply();
                                 break;
                             case "box":
                                 $weChat->text("城院盒子")->reply();
@@ -124,7 +124,7 @@ class IndexController extends Controller {
         }else{
             /* echo $_SERVER['HTTP_HOST']; */
             //确认不是微信发送的请求
-            /* echo 'Hello World'; */
+            echo 'Hello World';
             $weChat1 = new WeChatApi();
         }
     }

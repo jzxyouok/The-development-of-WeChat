@@ -1,35 +1,109 @@
 <?php
 namespace Home\Controller;
 use Think\Controller;
+use \Home\Model\WebRequestApi;
 class LoginController extends Controller {
     
     public function index(){
-        $this->display();
+        $authGet = I('get.auth','hihao');  
+        $auth = str_replace("+00+00+","/",$authGet);   //将替换的字符换回来
+        $openidVal = authcode($auth,'DECODE');   //只有带openidVal请求才是有效的，并且openidVal是有时效的加密
+        if($openidVal){
+            $this->assign('openid',$openidVal);
+            $this->display();
+        }else{
+            $this->assign('error','链接超时失效，如何您已经绑定就不用担心了，如果没绑定，请重新获取。');
+            $this->display('linkError');
+        } 
     }
+
     public function doLogin(){
         //校网模拟登录验证接口
         //git@github.com:wuxiwei/csxylink.git
         //curl -d 'username=学号&password=密码' http://server:port/api/login
         $studentno = I('post.studentno',''); 
         $password = I('post.password','');
+        $openidValue = I('post.openid','');
 
-        if ( $this->hasBindByStu($studentno) ) {  //已经绑定
-            return 'al';
+        if ( $this->hasBindByStu($studentno) ) {  //已经绑定(意味着密码错误也提示已经绑定了,所以一定做好解除绑定时的删除工作)
+            echo 'al';
         }else{
-            $idPass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
+            $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
             $where['studentno'] = $studentno;
             $where['password'] = $password;
-            $count = $idPass-> where($where)->count();
-            if($count>0){
-                echo 'success';   //如果存在直接登录成功
+            $count = $idpass->where($where)->count();
+            if($count > 0){
+                echo $openidValue;   //如果存在直接登录成功
             }else{
-                echo 'error';  //如果不存在则
+                echo $password."nihao";   //如果存在直接登录成功
+                $student = array(     
+                    'username'=>$studentno,
+                    'password'=>$password
+                );      
+                $resultJson = WebRequestApi::http_post(C('LOGIN_LINK'),$student);
+                $resultArr = json_decode($resultJson, true);
+                switch ( $resultArr['status'] ) {
+                    case 'ok':    //登录成功
+                        $idpassVal = $where;
+                        $openidVal = array(
+                            "openid" => $openidValue,
+                            "studentno" => $studentno,
+                            "date" => Date("Y-m-d"),
+                        );
+                        $result = $this->successBind($idpassVal, $openidVal);
+                        if($result){
+                            echo 'successas';
+                        }else{
+                            echo 'internal error';
+                        }
+                        break;
+                    case 'login failed':   //登录失败
+                        echo 'error';
+                        break;
+                    case 'School network connection failure':  //校网问题
+                        echo 'school';
+                        break;
+                    default:
+                        echo 'internal error';  //内部错误
+                }
             }
         }
     }
 
-    public function text(){
-        echo C('LOGIN_LINK');
+    /*
+     *绑定成功调用
+     *@param array $idpassVal 保存到tp_id_pass的值
+     *@param array $openidVal 保存到tp_open_id的值
+     */
+    public function successBind($idpassVal = array(), $openidVal = array()){
+        //tp_id_pass表先操作
+        if($idpassVal){
+            $idpassSql = M('idPass');
+            $result = $idpassSql->data($idpassVal)->add();
+            if(!$result){
+                return false;
+            }
+        }else{
+            return false;
+        }
+        if($openidVal){
+            $openidSql = M('openId');
+            $result = $openidsql->data($openidVal)->add();
+            if(!$result){
+                return false;
+            }
+        }else{
+            return false;
+        } 
+        return true;
+    }
+
+    /*
+     *获取openid加密值，做测试
+     */
+    public function getAtuh(){
+        $openidVal = $_GET['openid'] ? $_GET['openid'] : "oX0iPwnBTFbL6FPLNSewkNyc22k";
+        echo str_replace("%","<{*}>",authcode($openidVal,'ENCODE'));  
     }
 
     /*
@@ -49,25 +123,27 @@ class LoginController extends Controller {
 
     /*
      *绑定验证，如果已绑定返回学号，否则发送绑定提醒并exit
-     *@param $openId 根据openId值判断是否以绑定
+     *@param $openidVal 根据openidVal值判断是否以绑定
      *@param $return 默认false不返回数据 直接微信回复绑定提醒。反之true则返回false
      */
-    public function hasBind($weChat, $openId='0', $return=false){
+    public function hasBind($weChat, $openidVal='0', $return=false){
         $sql = M('openId');
         $where['openid'] = ':openid';   //参数绑定
-        $oId = $sql->where($where)->bind(':openid',$openId)->find();
+        $oId = $sql->where($where)->bind(':openid',$openidVal)->find();
         if($oId){
             return $oId['studentno'];
         }else{
             if($return){
                 return false;
             }else{
+                //请求参数不能含义 / ，所以先替换
+                $auth = str_replace("/","+00+00+",authcode($openidVal,'ENCODE'));
                 $bind = array(
                     "0"=>array(
                         'Title'=>'戳我绑定登录~',
                         'Description'=>"新学期新气象\n新的绑定方式！\n最新数据查询方式！\n首次绑定可能较慢，稍作等待哦。",
                         'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/bind.png',
-                        'Url'=> $_SERVER['HTTP_HOST'].U('Login/index')
+                        'Url'=> $_SERVER['HTTP_HOST'].U("Login/index?auth=$auth")
                     ),
                  );
                 $weChat->news($bind)->reply();
@@ -76,15 +152,22 @@ class LoginController extends Controller {
         }
     }
     public function add(){
-        $sql = M('openId');
-        $date=array(
-            "openid" => "oX0iPwnBTFbL6FPLNSewkNyc22k0",
-            "studentno" => "201312050",
-            "date" => Date("Y-m-d"),
-        );
+        /* $sql = M('openId'); */
+        /* $date=array( */
+        /*     "openid" => "oX0iPwnBTFbL6FPLNSewkNyc22k0", */
+        /*     "studentno" => "201312050", */
+        /*     "date" => Date("Y-m-d"), */
+        /* ); */
         /* $a = $sql->add($date); */
+        $studentno = I('studentno',''); 
+        $password = I('password','');
+            $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
+            $where['studentno'] = $studentno;
+            $where['password'] = $password;
+            $find = $idpass->where($where)->select();
+            dump($find);
         /* echo $a; */
-        dump($sql->find());
+        /* dump($sql->find()); */
         /* dump($sql->getField('studentno,password')); */
         /* $data1 = array('studentno'=>'201412052','password'=>'201412052'); */
         /* $sql-> where('id=2')->setField($data1); */

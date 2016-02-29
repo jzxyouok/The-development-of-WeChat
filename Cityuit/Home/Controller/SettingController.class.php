@@ -105,8 +105,8 @@ class SettingController extends Controller {
                         ),
                         1 => array (
                             "type" => "click",
-                            "name" => "指南联系",
-                            "key" => "contact"
+                            "name" => "更改密码",
+                            "key" => "change"
                         ),
                         2 => array (
                             "type" => "click",

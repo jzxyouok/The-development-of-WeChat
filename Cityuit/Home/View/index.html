@@ -1,1 +1,30 @@
  
+    <div class="form-waring" style="display: none;" id="school-show" >
+      <p>校网又崩了，稍后绑定</p>
+    </div>
+              if(data == 'success'){
+                $("#success-show").css("display", "");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "none");
+                $("#al-show").css("display", "none");
+                $("#school-show").css("display", "none");
+              }else if(data == 'error'){
+                $("#success-show").css("display", "none");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "");
+                $("#al-show").css("display", "none");
+                $("#school-show").css("display", "none");
+              }else if(data == "al"){
+                $("#success-show").css("display", "none");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "none");
+                $("#al-show").css("display", "");
+                $("#school-show").css("display", "none");
+              }
+              }else if(data == "school"){
+                $("#success-show").css("display", "none");
+                $("#p-show").css("display", "none");
+                $("#error-show").css("display", "none");
+                $("#al-show").css("display", "none");
+                $("#school-show").css("display", "");
+              }
