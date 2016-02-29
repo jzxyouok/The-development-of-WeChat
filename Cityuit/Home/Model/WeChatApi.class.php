@@ -24,9 +24,9 @@ class WeChatApi{
 	const MENU_GET_URL = '/menu/get?';
 	const MENU_DELETE_URL = '/menu/delete?';
 
-	private $token = "csxyxzs";
-    private $appid = "wx4ff4d9df9c2d688a";      //AppID(应用ID) 为了安全只有在使用的时候设置
-    private $appsecret = "b255b255a3cb281e591ad64dd279391f";      //AppSecret(应用密钥)
+	private $token = "";
+    private $appid = "";      //AppID(应用ID) 为了安全只有在使用的时候设置
+    private $appsecret = "";      //AppSecret(应用密钥)
 	private $access_token;
 	private $postxml;
 	private $_receive;
