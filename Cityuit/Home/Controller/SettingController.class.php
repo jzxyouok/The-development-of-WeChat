@@ -120,7 +120,7 @@ class SettingController extends Controller {
                         ),
                         4 => array (
                             "type" => "click",
-                            "name" => "解除绑定",
+                            "name" => "解绑操作",
                             "key" => "unbind"
                         ),
                     ),

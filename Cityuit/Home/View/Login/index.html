@@ -23,11 +23,13 @@ $(document).ready(function(){
     $("button").click(function(){
       var studentno = $("#inputText").val();
       var password = $("#inputPassword").val();
+      var openid = $("#inputOpenid").val();
       if(studentno.length != 0 && studentno != "" && password.length != 0 && password != ""){
       $.post("__URL__/doLogin",
         {
-        'studentno':studentno,
-        'password':password
+          'studentno':studentno,
+          'password':password,
+          'openid':openid
         },
         function(data,status){
         alert(data);
@@ -84,15 +86,15 @@ $(document).ready(function(){
       <p>学号或密码错误</p>
     </div>
     <div class="form-waring" style="display: none;" id="success-show" >
-      <p>绑定成功</p>
+      <p>绑定成功，返回使用吧</p>
     </div>
     <div class="form-waring" style="display: none;" id="al-show" >
-      <p>您已经绑定成功</p>
+      <p>您已经绑定成功，返回使用吧</p>
     </div>
     <div class="form-waring" style="display: none;" id="school-show" >
       <p>校网又崩了，稍后绑定</p>
     </div>
-    <input type="hidden" name="openid" value="<{$openid}>"/>
+    <input type="hidden" id="inputOpenid" name="openid" value="<{$openid}>"/>
     <label for="inputText" class="sr-only">学号</label>
     <input name="studentno" id="inputText" class="form-control" placeholder="学号" required="" autofocus="" type="text">
     <label for="inputPassword" class="sr-only">密码</label>

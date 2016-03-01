@@ -107,7 +107,13 @@ class IndexController extends Controller {
                                 $weChat->text("关于我们")->reply();
                                 break;
                             case "unbind":
-                                $weChat->text("解除绑定")->reply();
+                                $isBind = A('Login')->hasBind($weChat, $weChat->getRevFrom(), true);
+                                if($isBind){
+
+                                    $weChat->text("你确定要解除绑定吗，抛弃我么/可怜？欢迎提意见。\n\n回复“确认”取消绑定")->reply();
+                                }else{
+                                    A('Login')->showBind($weChat, $weChat->getRevFrom());
+                                }
                                 break;
                             default:
                                 $weChat->text("城院小助手")->reply();

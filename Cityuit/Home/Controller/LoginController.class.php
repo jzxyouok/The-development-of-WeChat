@@ -6,7 +6,7 @@ class LoginController extends Controller {
     
     public function index(){
         $authGet = I('get.auth','hihao');  
-        $auth = str_replace("+00+00+","/",$authGet);   //将替换的字符换回来
+        $auth = replaceStr($authGet, false);  //将替换的字符换回来
         $openidVal = authcode($auth,'DECODE');   //只有带openidVal请求才是有效的，并且openidVal是有时效的加密
         if($openidVal){
             $this->assign('openid',$openidVal);
@@ -25,7 +25,7 @@ class LoginController extends Controller {
         $password = I('post.password','');
         $openidValue = I('post.openid','');
 
-        if ( $this->hasBindByStu($studentno) ) {  //已经绑定(意味着密码错误也提示已经绑定了,所以一定做好解除绑定时的删除工作)
+        if ( $this->hasBind('', $openidValue, true) ) {  //已经绑定(意味着密码错误也提示已经绑定了,所以一定做好解除绑定时的删除工作)
             echo 'al';
         }else{
             $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
@@ -33,9 +33,20 @@ class LoginController extends Controller {
             $where['password'] = $password;
             $count = $idpass->where($where)->count();
             if($count > 0){
-                echo $openidValue;   //如果存在直接登录成功
+                $openidSql = M('openId');
+                $openidVal = array(
+                    "openid" => $openidValue,
+                    "studentno" => $studentno,
+                    "date" => Date("Y-m-d"),
+                );
+                $result = $openidSql->data($openidVal)->add();
+                if(!$result){
+                    echo 'internal error';
+                }else{   //如果存在直接登录成功，但是需要将openid重新添加到数据库
+                    /* $this->showSuccessBind($openidValue);  //根据openid我们可以推送绑定成功提醒 */
+                    echo 'success';
+                }
             }else{
-                echo $password."nihao";   //如果存在直接登录成功
                 $student = array(     
                     'username'=>$studentno,
                     'password'=>$password
@@ -52,7 +63,8 @@ class LoginController extends Controller {
                         );
                         $result = $this->successBind($idpassVal, $openidVal);
                         if($result){
-                            echo 'successas';
+                            /* $this->showSuccessBind($openidValue);  //根据openid我们可以推送绑定成功提醒 */
+                            echo 'success';
                         }else{
                             echo 'internal error';
                         }
@@ -88,7 +100,7 @@ class LoginController extends Controller {
         }
         if($openidVal){
             $openidSql = M('openId');
-            $result = $openidsql->data($openidVal)->add();
+            $result = $openidSql->data($openidVal)->add();
             if(!$result){
                 return false;
             }
@@ -99,16 +111,42 @@ class LoginController extends Controller {
     }
 
     /*
+     *发送绑定成功提醒
+     *需要直接发送至微信服务器，所以没办法实现，需要微信高级接口，需要认证
+     */
+    public function showSuccessBind($openidValue){
+        $weChat = new WeChatApi();
+
+        $count = 1;
+        $newsData = array(
+            "0"=>array(
+                'Title'=>'学号绑定成功提醒',
+            ),
+        );
+		$msg = array(
+			'ToUserName' => $openidValue,
+			'FromUserName'=> '原始ID',
+			'MsgType'=>WeChatApi::MSGTYPE_NEWS,
+			'CreateTime'=>time(),
+			'ArticleCount'=>$count,
+			'Articles'=>$newsData,
+		);
+        $weChat->reply($msg);
+    }
+
+    /*
      *获取openid加密值，做测试
      */
-    public function getAtuh(){
+    public function getAuth(){
         $openidVal = $_GET['openid'] ? $_GET['openid'] : "oX0iPwnBTFbL6FPLNSewkNyc22k";
-        echo str_replace("%","<{*}>",authcode($openidVal,'ENCODE'));  
+        echo replaceStr(authcode($openidVal,'ENCODE'));
+  
     }
 
     /*
      *绑定验证，如果已绑定返回学号，否则发送绑定提醒并exit
      *@param $studentno 根据学号值判断是否以绑定
+     *不建议使用：最好通过openid来判断是否绑定
      */
     public function hasBindByStu($studentno='0'){
         $sql = M('openId');
@@ -126,7 +164,7 @@ class LoginController extends Controller {
      *@param $openidVal 根据openidVal值判断是否以绑定
      *@param $return 默认false不返回数据 直接微信回复绑定提醒。反之true则返回false
      */
-    public function hasBind($weChat, $openidVal='0', $return=false){
+    public function hasBind($weChat = null, $openidVal='0', $return=false){
         $sql = M('openId');
         $where['openid'] = ':openid';   //参数绑定
         $oId = $sql->where($where)->bind(':openid',$openidVal)->find();
@@ -136,21 +174,38 @@ class LoginController extends Controller {
             if($return){
                 return false;
             }else{
-                //请求参数不能含义 / ，所以先替换
-                $auth = str_replace("/","+00+00+",authcode($openidVal,'ENCODE'));
-                $bind = array(
-                    "0"=>array(
-                        'Title'=>'戳我绑定登录~',
-                        'Description'=>"新学期新气象\n新的绑定方式！\n最新数据查询方式！\n首次绑定可能较慢，稍作等待哦。",
-                        'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/bind.png',
-                        'Url'=> $_SERVER['HTTP_HOST'].U("Login/index?auth=$auth")
-                    ),
-                 );
-                $weChat->news($bind)->reply();
+                $this->showBind($weChat, $openidVal);
                 exit;
             }
         }
     }
+
+    /*
+     *发送绑定提醒
+     */
+    public function showBind($weChat, $openidVal){
+        //公共函数1.加密2.字符替换
+        $auth = replaceStr(authcode($openidVal,'ENCODE'));
+        $bind = array(
+            "0"=>array(
+                'Title'=>'戳我绑定登录~',
+                'Description'=>"新学期新气象\n新的绑定方式！\n最新数据查询方式！\n首次绑定可能较慢，稍作等待哦。",
+                'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/bind.png',
+                'Url'=> $_SERVER['HTTP_HOST'].U("Login/index?auth=$auth")
+            ),
+         );
+        $weChat->news($bind)->reply();
+    }
+
+    /*
+     *解除绑定调用接口，只删除tp_open_id表
+     */
+    public function doLogout($openidVal){
+        $openid = M("openId"); // 实例化User对象
+        $openid->where("openid=$openidVal")->delete(); // 删除id为5的用户数据
+    }
+
+
     public function add(){
         /* $sql = M('openId'); */
         /* $date=array( */

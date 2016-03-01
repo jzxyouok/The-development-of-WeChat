@@ -1,8 +1,5 @@
 <?php
 
-function testF(){
-    echo 'nihao';
-}
 /*
  *函数authcode($string, $operation, $key, $expiry)中的$string：字符串，明文或密文；$operation：DECODE表示解密，其它表示加密；$key：密匙；$expiry：密文有效期。
  */
@@ -68,4 +65,56 @@ function authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
         // 因为加密后的密文可能是一些特殊字符，复制过程可能会丢失，所以用base64编码  
         return $keyc.str_replace('=', '', base64_encode($result));  
     }  
-} 
+}
+
+/*
+ *加密后的密文处在字符/，web请求不方便，所以先替换
+ *@param String $str 密文
+ *@param boolean $replace ture表示将 "/"替换成"+00+00+" false则反之
+ */
+function replaceStr($str, $replace = true){
+    if($replace){
+       return  str_replace("/","+00+00+",$str);
+    }else{
+       return str_replace("+00+00+","/",$str);
+    }
+}
+
+/**
+ * 设置缓存，按需重载
+ * @param string $cachename
+ * @param mixed $value
+ * @param int $expired
+ * @return boolean
+ */
+function setCache($cachename,$value,$expired){
+    echo '设置缓存';
+    S($cachename,$value,$expired);  //thinkphp框架对sae的支持
+    return;
+}
+
+/**
+ * 获取缓存，按需重载
+ * @param string $cachename
+ * @return mixed
+ */
+function getCache($cachename){
+    $cach = S($cachename);
+    if($cach){
+        echo 'access_token：从缓存获取';
+        return $cach;
+    }else{
+        return false;
+    }
+}
+
+/**
+ * 清除缓存，按需重载
+ * @param string $cachename
+ * @return boolean
+ */
+function removeCache($cachename){
+    S($cachename,null);
+    return;
+}
+
