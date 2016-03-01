@@ -3,7 +3,6 @@
  *微信接口类
  */
 namespace Home\Model;
-use \Home\Model\WebRequestApi;
 class WeChatApi{
     const MSGTYPE_TEXT = 'text'; //文本信息
     const MSGTYPE_IMAGE = 'image'; //图像
@@ -402,7 +401,7 @@ class WeChatApi{
 	 */
 	public function createMenu($data){
 		if (!$this->checkAuth() && !$this->access_token) return false;
-		$result = WebRequestApi::http_post(self::API_URL_PREFIX.self::MENU_CREATE_URL.'access_token='.$this->access_token,self::json_encode($data));
+		$result = $this->http_post(self::API_URL_PREFIX.self::MENU_CREATE_URL.'access_token='.$this->access_token,self::json_encode($data));
 		if ($result)
 		{
 			$json = json_decode($result,true);
@@ -422,7 +421,7 @@ class WeChatApi{
 	 */
 	public function getMenu(){
 		if (!$this->checkAuth() && !$this->access_token) return false;
-		$result = WebRequestApi::http_get(self::API_URL_PREFIX.self::MENU_GET_URL.'access_token='.$this->access_token);
+		$result = $this->http_get(self::API_URL_PREFIX.self::MENU_GET_URL.'access_token='.$this->access_token);
 		if ($result)
 		{
 			$json = json_decode($result,true);
@@ -442,7 +441,7 @@ class WeChatApi{
 	 */
 	public function deleteMenu(){
 		if (!$this->checkAuth() && !$this->access_token) return false;
-		$result = WebRequestApi::http_get(self::API_URL_PREFIX.self::MENU_DELETE_URL.'access_token='.$this->access_token);
+		$result = $this->http_get(self::API_URL_PREFIX.self::MENU_DELETE_URL.'access_token='.$this->access_token);
 		if ($result)
 		{
 			$json = json_decode($result,true);
@@ -473,12 +472,12 @@ class WeChatApi{
 		}
 
 		$authname = 'wechat_access_token'.$appid;
-		if ($rs = $this->getCache($authname))  {    //如果存在从缓存获取
+		if ($rs = S($authname))  {    //如果存在从缓存获取
 			$this->access_token = $rs;
 			return $rs;
 		}
 
-		$result = WebRequestApi::http_get(self::API_URL_PREFIX.self::AUTH_URL.'appid='.$appid.'&secret='.$appsecret);
+		$result = $this->http_get(self::API_URL_PREFIX.self::AUTH_URL.'appid='.$appid.'&secret='.$appsecret);
 		if ($result)
 		{
 			$json = json_decode($result,true);
@@ -489,48 +488,70 @@ class WeChatApi{
 			}
 			$this->access_token = $json['access_token'];
 			$expire = $json['expires_in'] ? intval($json['expires_in'])-100 : 3600;
-			$this->setCache($authname,$this->access_token,$expire);
+			S($authname,$this->access_token,$expire);    //thinkphp框架
 			return $this->access_token;
 		}
 		return false;
 	}
 
 	/**
-	 * 设置缓存，按需重载
-	 * @param string $cachename
-	 * @param mixed $value
-	 * @param int $expired
-	 * @return boolean
+	 * GET 请求
+	 * @param string $url
 	 */
-	protected function setCache($cachename,$value,$expired){
-        echo '设置缓存';
-        S($cachename,$value,$expired);  //thinkphp框架对sae的支持
-		return;
+	public static function http_get($url){
+		$oCurl = curl_init();
+		if(stripos($url,"https://")!==FALSE){
+			curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, FALSE);
+			curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+		}
+		curl_setopt($oCurl, CURLOPT_URL, $url);
+		curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1 );
+		$sContent = curl_exec($oCurl);
+		$aStatus = curl_getinfo($oCurl);
+		curl_close($oCurl);
+		if(intval($aStatus["http_code"])==200){
+			return $sContent;
+		}else{
+			return false;
+		}
 	}
-
+    
 	/**
-	 * 获取缓存，按需重载
-	 * @param string $cachename
-	 * @return mixed
+	 * POST 请求
+	 * @param string $url
+	 * @param array $param
+	 * @param boolean $post_file 是否文件上传
+	 * @return string content
 	 */
-    protected function getCache($cachename){
-        $cach = S($cachename);
-        if($cach){
-            echo 'access_token：从缓存获取';
-            return $cach;
-        }else{
-            return false;
-        }
-	}
-
-	/**
-	 * 清除缓存，按需重载
-	 * @param string $cachename
-	 * @return boolean
-	 */
-	protected function removeCache($cachename){
-        S($cachename,null);
-		return;
-	}
+	public static function http_post($url,$param,$post_file=false){
+		$oCurl = curl_init();
+		if(stripos($url,"https://")!==FALSE){
+			curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+		}
+		if (is_string($param) || $post_file) {
+			$strPOST = $param;
+		} else {
+			$aPOST = array();
+			foreach($param as $key=>$val){
+				$aPOST[] = $key."=".urlencode($val);
+			}
+			$strPOST =  join("&", $aPOST);
+		}
+		curl_setopt($oCurl, CURLOPT_URL, $url);
+		curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1 );
+		curl_setopt($oCurl, CURLOPT_POST,true);
+		curl_setopt($oCurl, CURLOPT_POSTFIELDS,$strPOST);
+		$sContent = curl_exec($oCurl);
+		$aStatus = curl_getinfo($oCurl);
+		curl_close($oCurl);
+		if(intval($aStatus["http_code"])==200){
+			return $sContent;
+		}else{
+			return false;
+		}
+    }
 }
 ?>

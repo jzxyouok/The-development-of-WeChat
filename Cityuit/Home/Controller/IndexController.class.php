@@ -10,7 +10,8 @@ class IndexController extends Controller {
             $type = $weChat->getRev()->getRevType();
             switch($type) {
                 case WeChatApi::MSGTYPE_TEXT:
-                    $weChat->text($weChat->getRevFrom())->reply();
+                    A('Text')->dealText($weChat);
+                    //判断当前操作
                     exit;
                     break;
                 case WeChatApi::MSGTYPE_IMAGE:
@@ -86,7 +87,7 @@ class IndexController extends Controller {
                                 $weChat->text("寻物平台")->reply();
                                 break;
                             case "express":
-                                $weChat->text("快递查询")->reply();
+                                A('Campus')->dealExpress($weChat);
                                 break;
                             case "classroom":
                                 $weChat->text("自习教室")->reply();
@@ -98,7 +99,7 @@ class IndexController extends Controller {
                                 $weChat->text("饭卡挂失")->reply();
                                 break;
                             case "change":
-                                $weChat->text("更改密码")->reply();
+                                $weChat->text("信息更新")->reply();
                                 break;
                             case "box":
                                 $weChat->text("城院盒子")->reply();
@@ -109,14 +110,15 @@ class IndexController extends Controller {
                             case "unbind":
                                 $isBind = A('Login')->hasBind($weChat, $weChat->getRevFrom(), true);
                                 if($isBind){
-
-                                    $weChat->text("你确定要解除绑定吗，抛弃我么/可怜？欢迎提意见。\n\n回复“确认”取消绑定")->reply();
+                                    S($weChat->getRevFrom().'_do','unbind','120');
+                                    $weChat->text("你确定要解除绑定吗，抛弃我么/可怜？欢迎提意见。\n\n回复【确认】取消绑定")->reply();
                                 }else{
                                     A('Login')->showBind($weChat, $weChat->getRevFrom());
                                 }
                                 break;
                             default:
-                                $weChat->text("城院小助手")->reply();
+                                $weChat->text("你说什么")->reply();
+
                                 break;
                         }
                     }

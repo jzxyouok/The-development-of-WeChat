@@ -80,41 +80,69 @@ function replaceStr($str, $replace = true){
     }
 }
 
-/**
- * 设置缓存，按需重载
- * @param string $cachename
- * @param mixed $value
- * @param int $expired
- * @return boolean
+/*
+ *判断是否为快递单号
  */
-function setCache($cachename,$value,$expired){
-    echo '设置缓存';
-    S($cachename,$value,$expired);  //thinkphp框架对sae的支持
-    return;
+function isExpress($express){
+    return preg_match("/^[0-9a-zA-Z]{8,}$/",$express) ? true : false;
 }
 
 /**
- * 获取缓存，按需重载
- * @param string $cachename
- * @return mixed
+ * GET 请求
+ * @param string $url
  */
-function getCache($cachename){
-    $cach = S($cachename);
-    if($cach){
-        echo 'access_token：从缓存获取';
-        return $cach;
+function http_get($url){
+    $oCurl = curl_init();
+    if(stripos($url,"https://")!==FALSE){
+        curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+    }
+    curl_setopt($oCurl, CURLOPT_URL, $url);
+    curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1 );
+    $sContent = curl_exec($oCurl);
+    $aStatus = curl_getinfo($oCurl);
+    curl_close($oCurl);
+    if(intval($aStatus["http_code"])==200){
+        return $sContent;
     }else{
         return false;
     }
 }
 
 /**
- * 清除缓存，按需重载
- * @param string $cachename
- * @return boolean
+ * POST 请求
+ * @param string $url
+ * @param array $param
+ * @param boolean $post_file 是否文件上传
+ * @return string content
  */
-function removeCache($cachename){
-    S($cachename,null);
-    return;
+function http_post($url,$param,$post_file=false){
+    $oCurl = curl_init();
+    if(stripos($url,"https://")!==FALSE){
+        curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+    }
+    if (is_string($param) || $post_file) {
+        $strPOST = $param;
+    } else {
+        $aPOST = array();
+        foreach($param as $key=>$val){
+            $aPOST[] = $key."=".urlencode($val);
+        }
+        $strPOST =  join("&", $aPOST);
+    }
+    curl_setopt($oCurl, CURLOPT_URL, $url);
+    curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1 );
+    curl_setopt($oCurl, CURLOPT_POST,true);
+    curl_setopt($oCurl, CURLOPT_POSTFIELDS,$strPOST);
+    $sContent = curl_exec($oCurl);
+    $aStatus = curl_getinfo($oCurl);
+    curl_close($oCurl);
+    if(intval($aStatus["http_code"])==200){
+        return $sContent;
+    }else{
+        return false;
+    }
 }
-

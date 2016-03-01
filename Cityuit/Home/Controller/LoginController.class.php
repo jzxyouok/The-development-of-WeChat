@@ -1,7 +1,6 @@
 <?php
 namespace Home\Controller;
 use Think\Controller;
-use \Home\Model\WebRequestApi;
 class LoginController extends Controller {
     
     public function index(){
@@ -12,7 +11,7 @@ class LoginController extends Controller {
             $this->assign('openid',$openidVal);
             $this->display();
         }else{
-            $this->assign('error','链接超时失效，如何您已经绑定就不用担心了，如果没绑定，请重新获取。');
+            $this->assign('error','链接超时失效，如果你已经绑定就不用担心了，如果没绑定，请重新获取。');
             $this->display('linkError');
         } 
     }
@@ -51,7 +50,7 @@ class LoginController extends Controller {
                     'username'=>$studentno,
                     'password'=>$password
                 );      
-                $resultJson = WebRequestApi::http_post(C('LOGIN_LINK'),$student);
+                $resultJson = http_post(C('LOGIN_LINK'),$student);
                 $resultArr = json_decode($resultJson, true);
                 switch ( $resultArr['status'] ) {
                     case 'ok':    //登录成功
@@ -202,7 +201,8 @@ class LoginController extends Controller {
      */
     public function doLogout($openidVal){
         $openid = M("openId"); // 实例化User对象
-        $openid->where("openid=$openidVal")->delete(); // 删除id为5的用户数据
+        $where['openid'] = ':openid';   //参数绑定
+        $openid->where($where)->bind(':openid',$openidVal)->delete(); // 删除id为5的用户数据
     }
 
 
@@ -214,13 +214,16 @@ class LoginController extends Controller {
         /*     "date" => Date("Y-m-d"), */
         /* ); */
         /* $a = $sql->add($date); */
-        $studentno = I('studentno',''); 
-        $password = I('password','');
-            $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
-            $where['studentno'] = $studentno;
-            $where['password'] = $password;
-            $find = $idpass->where($where)->select();
-            dump($find);
+        $openidVal = I('in',''); 
+        /* $studentno = I('studentno',''); */ 
+        /* $password = I('password',''); */
+        /*     $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息 */
+        /*     $where['studentno'] = $studentno; */
+        /*     $where['password'] = $password; */
+        /*     $find = $idpass->where($where)->select(); */
+        /*     dump($find); */
+        $openid = M("openId"); // 实例化User对象
+        $openid->where("openid=$openidVal")->delete(); // 删除id为5的用户数据
         /* echo $a; */
         /* dump($sql->find()); */
         /* dump($sql->getField('studentno,password')); */
