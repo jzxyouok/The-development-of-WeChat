@@ -38,5 +38,6 @@ return array(
 	/* 'WECHAT_TOKEN' => "xxxxxx", */
     /* 'WECHAT_APPID' => "xxxxxx",      //AppID(应用ID) 为了安全只有在使用的时候设置 */
     /* 'WECHAT_APPSECRET' => "xxxxxx",      //AppSecret(应用密钥) */
+
     /* 'AUTH_CODE_KEY' => "xxxxxx",     //为加密算法提供key值 */
 );

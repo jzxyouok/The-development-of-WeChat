@@ -70,7 +70,7 @@ class StudentsController extends Controller {
         $hava = false;
         $searchSchedule = $this->matchSchedule($scheduleJson, $offset);   //获取到某一天的全部课程
         foreach($searchSchedule as $key => $value){
-            $scheduleStr = "时间：".$key."节课  ".$value["class_name"]."\n".$value["teacher_name"]." ".$value["classrom"];
+            $scheduleStr = $this->detailOne($key, $value);
             $scheduleArr = array(
                 'Title' => $scheduleStr, 
             );
@@ -93,10 +93,30 @@ class StudentsController extends Controller {
     }
 
     /*
-     *单节课处理样式
+     *单节课处理样式 加时间判断
      */
-    public function detailOne($key. $value){
-        $scheduleStr = "时间：".$key."节课  ".$value["class_name"]."\n".$value["teacher_name"]." ".$value["classrom"];
+    public function detailOne($key, $value){
+        switch ( $key ) {
+            case '1-2':
+                $time = strpos($value['classrom'], '教学楼') !== false ? "8:10-9:45" : "8:05-9:40";
+                break;
+            case '3-4':
+                $time = strpos($value['classrom'], '教学楼') !== false ? "8:10-9:45" : "8:05-9:40";
+                break;
+            case '5-6':
+                $time = strpos($value['classrom'], '教学楼') !== false ? "8:10-9:45" : "8:05-9:40";
+                break;
+            case '7-8':
+                $time = strpos($value['classrom'], '教学楼') !== false ? "8:10-9:45" : "8:05-9:40";
+                break;
+            case '9-10':
+                $time = strpos($value['classrom'], '教学楼') !== false ? "8:10-9:45" : "8:05-9:40";
+                break;
+            case '11-12':
+                $time = strpos($value['classrom'], '教学楼') !== false ? "8:10-9:45" : "8:05-9:40";
+                break;
+        }
+        return $scheduleStr = "时间：".$key."节课  [".$time."]\n课程：".$value["class_name"]."\n教师：".$value["teacher_name"]."  教室：".$value["classrom"];
     }
 
     /*
