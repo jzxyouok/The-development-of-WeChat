@@ -66,19 +66,19 @@ class IndexController extends Controller {
                                 break;
                             case "today":
                                 /* $weChat->text("我是课表")->reply(); */
-                                /* $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //实例化Login控制器调用方法 */
-                                $class = array(
-                                    "0"=>array(
-                                        'Title'=>'今日课表(02月29日 周一)',
-                                    ),
-                                    "1"=>array(
-                                        'Title'=>'今日没有课呢~快出去看看吧',
-                                    ),
-                                    "3"=>array(
-                                        'Title'=>'点此chuo进一周课表 ^_^|||',
-                                    ),
-                                 );
-                                $weChat->news($class)->reply();
+                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //实例化Login控制器调用方法
+                                /* $class = array( */
+                                /*     "0"=>array( */
+                                /*         'Title'=>'今日课表(02月29日 周一)', */
+                                /*     ), */
+                                /*     "1"=>array( */
+                                /*         'Title'=>'今日没有课呢~快出去看看吧', */
+                                /*     ), */
+                                /*     "3"=>array( */
+                                /*         'Title'=>'点此chuo进一周课表 ^_^|||', */
+                                /*     ), */
+                                /*  ); */
+                                /* $weChat->news($class)->reply(); */
                                 break;
                             case "wall":
                                 $weChat->text("表白墙")->reply();
@@ -107,14 +107,8 @@ class IndexController extends Controller {
                             case "about":
                                 $weChat->text("关于我们")->reply();
                                 break;
-                            case "unbind":
-                                $isBind = A('Login')->hasBind($weChat, $weChat->getRevFrom(), true);
-                                if($isBind){
-                                    S($weChat->getRevFrom().'_do','unbind','120');
-                                    $weChat->text("你确定要解除绑定吗，抛弃我么/可怜？欢迎提意见。\n\n回复【确认】取消绑定")->reply();
-                                }else{
-                                    A('Login')->showBind($weChat, $weChat->getRevFrom());
-                                }
+                            case "bind":
+                                A('Login')->dealBind($weChat);
                                 break;
                             default:
                                 $weChat->text("你说什么")->reply();

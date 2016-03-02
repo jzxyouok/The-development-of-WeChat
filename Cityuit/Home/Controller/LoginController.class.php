@@ -142,21 +142,6 @@ class LoginController extends Controller {
   
     }
 
-    /*
-     *绑定验证，如果已绑定返回学号，否则发送绑定提醒并exit
-     *@param $studentno 根据学号值判断是否以绑定
-     *不建议使用：最好通过openid来判断是否绑定
-     */
-    public function hasBindByStu($studentno='0'){
-        $sql = M('openId');
-        $where['studentno'] = ':studentno';   //参数绑定
-        $oId = $sql->where($where)->bind(':studentno',$studentno)->find();
-        if($oId){
-            return true;
-        }else{
-            return false;
-        }
-    }
 
     /*
      *绑定验证，如果已绑定返回学号，否则发送绑定提醒并exit
@@ -199,12 +184,27 @@ class LoginController extends Controller {
     /*
      *解除绑定调用接口，只删除tp_open_id表
      */
-    public function doLogout($openidVal){
+    public function doLogout($weChat){
         $openid = M("openId"); // 实例化User对象
         $where['openid'] = ':openid';   //参数绑定
-        $openid->where($where)->bind(':openid',$openidVal)->delete(); // 删除id为5的用户数据
+        $openid->where($where)->bind(':openid',$weChat->getRevFrom())->delete(); // 删除id为5的用户数据
+
+        $weChat->text("取消绑定成功。\n期待你下次绑定，我会做的更好。")->reply();
+        S($weChat->getRevFrom().'_do',null);   //删除缓存
     }
 
+    /*
+     *单击取消绑定处理
+     */
+    public function dealBind($weChat){
+        $isBind = $this->hasBind($weChat, $weChat->getRevFrom(), true);
+        if($isBind){
+            $weChat->text("你确定要解除绑定吗，抛弃我么/可怜？欢迎提意见。\n\n回复【确认】取消绑定\n回复【exit】退出操作")->reply();
+            S($weChat->getRevFrom().'_do','unbind','120');
+        }else{
+            $this->showBind($weChat, $weChat->getRevFrom());
+        }
+    }
 
     public function add(){
         /* $sql = M('openId'); */

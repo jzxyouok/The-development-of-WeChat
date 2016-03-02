@@ -1,6 +1,9 @@
 <?php
 namespace Home\Controller;
 use Think\Controller;
+/*
+ *第三排按钮帮助功能等接口
+ */
 class HelpController extends Controller {
     public function index(){
         /* $this->display(); */
