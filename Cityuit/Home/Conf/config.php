@@ -31,10 +31,12 @@ return array(
     /* 'WEB_HOST' => 'http://2.cityuit.sinaapp.com' */
 
     //自定义常量
+
+    'START_DATE_OF_SCHOOL' => '2016-2-29',   //开学日期，每学期需要手动修改
+
     /* 'CITY_LINK' => 'http://xxxxxx',   //校网登录验证接口 */
 	/* 'WECHAT_TOKEN' => "xxxxxx", */
     /* 'WECHAT_APPID' => "xxxxxx",      //AppID(应用ID) 为了安全只有在使用的时候设置 */
     /* 'WECHAT_APPSECRET' => "xxxxxx",      //AppSecret(应用密钥) */
-
     /* 'AUTH_CODE_KEY' => "xxxxxx",     //为加密算法提供key值 */
 );

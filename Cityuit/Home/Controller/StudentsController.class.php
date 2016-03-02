@@ -13,28 +13,142 @@ class StudentsController extends Controller {
     /*
      *获取课表处理
      */
-    public function dealSchedule($weChat,$studentno){
+    public function dealSchedule($weChat,$studentno,$offset = 0){
+    /* public function dealSchedule(){ */
+    /*     $studentno = I('s'); */
+        
         $scheduleVal = $this->hasSchedule($studentno);   //获取本地课表
         if($scheduleVal){
-            $weChat->text($this->matchSchedule($scheduleVal))->reply();
+            $this->showSchedule($weChat, $scheduleVal, $offset);
+            /* $this->matchSchedule($scheduleVal); */
         }else{
             $password = A('Login')->getPassword($studentno);
             $scheduleValue = $this->getScheduleFromLink($studentno, $password);
             if($scheduleValue){
-                $weChat->text($this->matchSchedule($scheduleValue))->reply();
+                    /* $weChat->text($scheduleValue)->reply(); */
+                $this->showSchedule($weChat, $scheduleValue, $offset);
             }else{
                 //出错可能1.校网崩了。2.获取课表每学期更新的值不匹配，没有返回值。3.用户的密码更换了。4.之后再找其它问题
-                $weChat->text('出错了')->reply();
+                $this->showBug($weChat);
             }
         }
     }
 
     /*
-     *处理课表取得今天 明天课表
+     *大bug回复
      */
-    public function matchSchedule($schedulejson){
-        $scheduleArr=json_decode($schedulejson, true); 
-        return $scheduleArr['Mon']['1-2'][0]['class_name'];
+    public function showBug($weChat){
+        $class = array(
+            "0"=>array(
+                'Title'=>'抱歉：出问题了 （┬＿┬）↘',
+            ),
+            "1"=>array(
+                'Title'=>"建议先试试【贴心帮助】->【信息更新】\n如果不能解决问题希望可以加入QQ308407868反馈群告诉给我们，我们会为大家尽快处理，谢谢支持。",
+            ),
+         );
+        $weChat->news($class)->reply();
+    }
+
+    /*
+     *发送课表模版
+     *@param $offset 判断符 0 => 今天 1 => 明天  2=> 后天
+     */
+    public function showSchedule($weChat, $scheduleJson, $offset = 0){
+        $dateMonth = date("m月d日",strtotime('+'.$offset.' day'));   //获得查询日期中文
+        $week = $this->calcWeek(date("Y-m-d",strtotime('+'.$offset.' day')));      //获得查询日期的周数，日期同上处理
+        $dateWeek = ' 周'.$this->getWeek(date("Y-m-d",strtotime('+'.$offset.' day')), 'cn');   //星期几  中文
+
+        $scheduleSend = array();
+
+        $topArray = array(
+            'Title' => "第".$week."周（".$dateMonth.$dateWeek."）",
+        );
+
+        $scheduleSend[] = $topArray;   //添加头
+            
+        //判断有没有课
+        $hava = false;
+        $searchSchedule = $this->matchSchedule($scheduleJson, $offset);   //获取到某一天的全部课程
+        foreach($searchSchedule as $key => $value){
+            $scheduleStr = "时间：".$key."节课  ".$value["class_name"]."\n".$value["teacher_name"]." ".$value["classrom"];
+            $scheduleArr = array(
+                'Title' => $scheduleStr, 
+            );
+            $scheduleSend[] = $scheduleArr;   //添加课程
+            $have = true;
+        }
+
+        if(!$have){
+            $haveNo = array(
+                'Title'=>'今日没有课呢~快出去看看吧',
+            );
+            $scheduleSend[] = $haveNo;   //添加没有课程
+        }
+
+        $allWeek = array(
+            'Title'=>'点此chuo进一周课表 ^_^|||',
+        );
+        $scheduleSend[] = $allWeek;   //添加尾巴
+        $weChat->news($scheduleSend)->reply();
+    }
+
+    /*
+     *单节课处理样式
+     */
+    public function detailOne($key. $value){
+        $scheduleStr = "时间：".$key."节课  ".$value["class_name"]."\n".$value["teacher_name"]." ".$value["classrom"];
+    }
+
+    /*
+     *处理课表。获取到某一天所有的课程
+     *@param retunr array
+     */
+    public function matchSchedule($scheduleJson, $offset = 0){
+        $searchSchedule = array();
+        $week = $this->calcWeek(date("Y-m-d",strtotime('+'.$offset.' day')));      //获得查询日期的周数
+        $dateWeekEn = $this->getWeek(date("Y-m-d",strtotime('+'.$offset.' day')), 'en');   //星期几 英语
+        $scheduleArr=json_decode($scheduleJson, true); 
+        for($i=0 ; $i<6 ; $i++){   //六节课
+            $scheduleDay = $scheduleArr[$dateWeekEn][(String)($i*2+1).'-'.(String)($i*2+2)];
+            for($j=0 ; $j<count($scheduleDay) ; $j++){
+                if(in_array($week, $scheduleDay[(String)$j]["weeks"])){
+                    $searchSchedule[(String)($i*2+1).'-'.(String)($i*2+2)] = $scheduleDay[(String)$j];
+                }
+            }
+        }
+        return $searchSchedule;
+    }
+
+    /*
+     *显示中文星期几，处理  $Lang = cn
+     *提供英语星期前三字符，处理   $Lang = en
+     */
+    public function getWeek($date, $Lang)
+    {
+        if($date == 0){
+            $date=date("Y-m-d");
+        }
+        if($Lang == 'cn'){
+            $arr = array('天','一','二','三','四','五','六');
+        }else{
+            $arr = array('Sun','Mon','Tus','Wed','Thu','Fri','Sat');
+        }
+        return $arr[date('w',strtotime($date))];
+    }
+
+    /*
+     *计算当前周数
+     *@param $date
+     */
+    public function calcWeek($Date_1 = 0){
+        if($Date_1 == 0){
+            $Date_1=date("Y-m-d");
+        }
+        $Date_2 = C('START_DATE_OF_SCHOOL');
+        $d1 = strtotime($Date_1);
+        $d2 = strtotime($Date_2);
+        $week = ceil(($d1-$d2)/3600/24/7);
+        return $week;
     }
 
     /*
@@ -62,14 +176,14 @@ class StudentsController extends Controller {
                     $this->addSchedule($schedule);
                     return json_encode($scheduleArr,JSON_UNESCAPED_UNICODE);   //以JSON格式传入所以也以JSON格式返回
                 }else{
-                    return "false"; 
+                    return false; 
                 }
                 break;
             case 'School network connection failure':  //校网问题
-                return 'false';
+                return false;
                 break;
             default:
-                return "false";
+                return false;
         }
     
     }

@@ -68,21 +68,6 @@ class IndexController extends Controller {
                                 /* $weChat->text("我是课表")->reply(); */
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //实例化Login控制器调用方法,如果存在返回学号值，不存在方法已将提醒绑定发送，并停止程序
                                 A('Students')->dealSchedule($weChat,$id);
-                                /* $class = array( */
-                                /*     "0"=>array( */
-                                /*         'Title'=>'今日课表(02月29日 周一)', */
-                                /*     ), */
-                                /*     "1"=>array( */
-                                /*         'Title'=>'今日没有课呢~快出去看看吧', */
-                                /*     ), */
-                                /*     "3"=>array( */
-                                /*         'Title'=>'点此chuo进一周课表 ^_^|||', */
-                                /*     ), */
-                                /*     "4"=>array( */
-                                /*         'Title'=>'如果信息不全或者错误，点此更新信息', */
-                                    /* ), */
-                                 /* ); */
-                                /* $weChat->news($class)->reply(); */
                                 break;
                             case "wall":
                                 $weChat->text("表白墙")->reply();
