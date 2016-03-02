@@ -2,7 +2,7 @@
 namespace Home\Controller;
 use Think\Controller;
 /*
- *第二拍按钮，校园服务控制实现
+ *第二排按钮，校园服务控制实现
  */
 class CampusController extends Controller {
     public function index(){

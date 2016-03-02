@@ -31,7 +31,7 @@ return array(
     /* 'WEB_HOST' => 'http://2.cityuit.sinaapp.com' */
 
     //自定义常量
-    /* 'LOGIN_LINK' => 'http://xxxxxx',   //校网登录验证接口 */
+    /* 'CITY_LINK' => 'http://xxxxxx',   //校网登录验证接口 */
 	/* 'WECHAT_TOKEN' => "xxxxxx", */
     /* 'WECHAT_APPID' => "xxxxxx",      //AppID(应用ID) 为了安全只有在使用的时候设置 */
     /* 'WECHAT_APPSECRET' => "xxxxxx",      //AppSecret(应用密钥) */

@@ -1,6 +1,9 @@
 <?php
 namespace Home\Controller;
 use Think\Controller;
+/*
+ *所有关于个人登录等信息的控制
+ */
 class LoginController extends Controller {
     
     public function index(){
@@ -27,18 +30,18 @@ class LoginController extends Controller {
         if ( $this->hasBind('', $openidValue, true) ) {  //已经绑定(意味着密码错误也提示已经绑定了,所以一定做好解除绑定时的删除工作)
             echo 'al';
         }else{
-            $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
+            $Idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
             $where['studentno'] = $studentno;
             $where['password'] = $password;
-            $count = $idpass->where($where)->count();
+            $count = $Idpass->where($where)->count();
             if($count > 0){
-                $openidSql = M('openId');
+                $Openid = M('openId');
                 $openidVal = array(
                     "openid" => $openidValue,
                     "studentno" => $studentno,
                     "date" => Date("Y-m-d"),
                 );
-                $result = $openidSql->data($openidVal)->add();
+                $result = $Openid->data($openidVal)->add();
                 if(!$result){
                     echo 'internal error';
                 }else{   //如果存在直接登录成功，但是需要将openid重新添加到数据库
@@ -50,7 +53,7 @@ class LoginController extends Controller {
                     'username'=>$studentno,
                     'password'=>$password
                 );      
-                $resultJson = http_post(C('LOGIN_LINK'),$student);
+                $resultJson = http_post(C('CITY_LINK').'login',$student);
                 $resultArr = json_decode($resultJson, true);
                 switch ( $resultArr['status'] ) {
                     case 'ok':    //登录成功
@@ -89,8 +92,8 @@ class LoginController extends Controller {
     public function successBind($idpassVal = array(), $openidVal = array()){
         //tp_id_pass表先操作
         if($idpassVal){
-            $idpassSql = M('idPass');
-            $result = $idpassSql->data($idpassVal)->add();
+            $Idpass = M('idPass');
+            $result = $Idpass->data($idpassVal)->add();
             if(!$result){
                 return false;
             }
@@ -98,8 +101,8 @@ class LoginController extends Controller {
             return false;
         }
         if($openidVal){
-            $openidSql = M('openId');
-            $result = $openidSql->data($openidVal)->add();
+            $Openid = M('openId');
+            $result = $Openid->data($openidVal)->add();
             if(!$result){
                 return false;
             }
@@ -149,9 +152,9 @@ class LoginController extends Controller {
      *@param $return 默认false不返回数据 直接微信回复绑定提醒。反之true则返回false
      */
     public function hasBind($weChat = null, $openidVal='0', $return=false){
-        $sql = M('openId');
+        $Openid = M('openId');
         $where['openid'] = ':openid';   //参数绑定
-        $oId = $sql->where($where)->bind(':openid',$openidVal)->find();
+        $oId = $Openid->where($where)->bind(':openid',$openidVal)->find();
         if($oId){
             return $oId['studentno'];
         }else{
@@ -182,12 +185,27 @@ class LoginController extends Controller {
     }
 
     /*
+     *根据学号获取密码
+     *@param string $studentno 学号
+     */
+    public function getPassword($studentno = ""){
+        $Idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息
+        $where['studentno']=':studentno';
+        $idpassVal = $Idpass->where($where)->bind(':studentno',$studentno)->find();
+        if($idpassVal){
+            return $idpassVal['password'];  //存在就返回密码
+        }else{
+            return false;
+        }
+    }
+
+    /*
      *解除绑定调用接口，只删除tp_open_id表
      */
     public function doLogout($weChat){
-        $openid = M("openId"); // 实例化User对象
+        $Openid = M("openId"); // 实例化User对象
         $where['openid'] = ':openid';   //参数绑定
-        $openid->where($where)->bind(':openid',$weChat->getRevFrom())->delete(); // 删除id为5的用户数据
+        $Openid->where($where)->bind(':openid',$weChat->getRevFrom())->delete(); // 删除id为5的用户数据
 
         $weChat->text("取消绑定成功。\n期待你下次绑定，我会做的更好。")->reply();
         S($weChat->getRevFrom().'_do',null);   //删除缓存
@@ -214,7 +232,7 @@ class LoginController extends Controller {
         /*     "date" => Date("Y-m-d"), */
         /* ); */
         /* $a = $sql->add($date); */
-        $openidVal = I('in',''); 
+        $studentno= I('in',''); 
         /* $studentno = I('studentno',''); */ 
         /* $password = I('password',''); */
         /*     $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息 */
@@ -222,9 +240,10 @@ class LoginController extends Controller {
         /*     $where['password'] = $password; */
         /*     $find = $idpass->where($where)->select(); */
         /*     dump($find); */
-        $openid = M("openId"); // 实例化User对象
-        $openid->where("openid=$openidVal")->delete(); // 删除id为5的用户数据
-        /* echo $a; */
+        $Class = M('Class');
+        $where['studentno']=':studentno';
+        $classVal = $Class->where($where)->bind(':studentno',$studentno)->find();
+        echo $classVal;
         /* dump($sql->find()); */
         /* dump($sql->getField('studentno,password')); */
         /* $data1 = array('studentno'=>'201412052','password'=>'201412052'); */
