@@ -75,8 +75,8 @@ class SettingController extends Controller {
                         ),
                         1 => array (
                             "type" => "click",
-                            "name" => "寻物平台",
-                            "key" => "lost"
+                            "name" => "四六级",
+                            "key" => "cet"
                         ),
                         2 => array (
                             "type" => "click",

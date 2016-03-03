@@ -52,5 +52,62 @@ class CampusController extends Controller {
             ),
          );
         $weChat->news($ex)->reply();
+        S($weChat->getRevFrom().'_do',null);   //删除操作缓存
+    }
+
+    /*
+     *处理四六级查询接口
+     */
+    public function daelCet(){
+    }
+
+
+    public function httpGetCet(){
+        $ch = curl_init();
+        $url = "http://www.chsi.com.cn/cet/query?zkzh=211150152201126&xm=张坤";
+        /* curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:120.27.53.164', 'CLIENT-IP:120.27.53.164')); */
+        curl_setopt($ch, CURLOPT_REFERER, "http://www.chsi.com.cn/cet/");
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
+        curl_setopt($ch, CURLOPT_PROXY, "58.222.254.11"); //代理服务器地址
+        curl_setopt($ch, CURLOPT_PROXYPORT, 3128); //代理服务器端口
+        //curl_setopt($ch, CURLOPT_PROXYUSERPWD, ":"); //http代理认证帐号，username:password的格式
+        curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); //使用http代理模式
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+        $sContent = curl_exec($ch);
+        $aStatus = curl_getinfo($ch);
+        curl_close($ch);
+        if(intval($aStatus["http_code"])==200){
+            //开启匹配正则取出内容
+            echo $sContent;
+        }else{
+            /* return false; */
+            /* echo 'nihao'.$aStatus["http_code"]; */
+            echo $sContent;
+        }
+    }
+    function cet(){
+        $name = '张坤';
+        $id = '211150152201126';
+            $name = urlencode(mb_convert_encoding($name, 'gb2312', 'utf-8'));
+                $post = 'id=' . $id . '&name=' . $name;
+                $url = "http://cet.99sushe.com/find";
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                        curl_setopt($ch, CURLOPT_REFERER, "http://cet.99sushe.com/");
+                        curl_setopt($ch, CURLOPT_POST, 1);
+                            curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                                curl_setopt($ch, CURLOPT_NOBODY, false);
+                                $str = curl_exec($ch);
+                                    curl_close($ch);
+                                    $str = iconv("GB2312", "UTF-8", $str);
+                                    if (strlen($str) < 10) {
+                                           echo 'nihao' ;        
+                                                return false;
+                                    }
+                                        echo explode(',', $str);
+
     }
 }

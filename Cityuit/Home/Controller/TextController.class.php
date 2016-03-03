@@ -60,13 +60,15 @@ class TextController extends Controller {
             //查看缓存中是否有操作
             switch ( S($weChat->getRevFrom().'_do') ) {
             case 'express':
-                if(isExpress($weChat->getRevContent())){
+                if(isExpress($weChat->getRevContent())){     //单号简单验证
                     A('Campus')->checkExpress($weChat, $weChat->getRevContent());
-                    S($weChat->getRevFrom().'_do',null);   //删除操作缓存
                     S($weChat->getRevFrom().'_spress',$weChat->getRevContent(),'86400');   //将单号存入缓存，默认一天时间
                 }else{
                     $weChat->text("单号无法识别，重新输入。\n回复【exit】退出操作。")->reply();
                 }
+                break;
+            case 'updateinfo':
+                A('Help')->dealUpdate($weChat);
                 break;
             case 'unbind':
                 if($weChat->getRevContent() == '确认'){
@@ -74,7 +76,7 @@ class TextController extends Controller {
                     break;
                 }  //如果回复的不是确认。则执行后续的帮助提示
             default:
-                $weChat->text("有疑问，请输入关键词【帮助】查询。\n也可以直接回复消息，主页君不定时上线 ^_^|||")->reply();
+                $weChat->text("有疑问，请输入关键词【帮助】查询。")->reply();
             }
         }
     }

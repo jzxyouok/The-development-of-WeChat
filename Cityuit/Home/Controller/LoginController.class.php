@@ -138,16 +138,17 @@ class LoginController extends Controller {
 
     /*
      *获取openid加密值，做测试
+     *获取学号加密值，做测试
      */
     public function getAuth(){
-        $openidVal = $_GET['openid'] ? $_GET['openid'] : "oX0iPwnBTFbL6FPLNSewkNyc22k";
-        echo replaceStr(authcode($openidVal,'ENCODE'));
-  
+        /* $openidVal = $_GET['openid'] ? $_GET['openid'] : "oX0iPwnBTFbL6FPLNSewkNyc22k"; */
+        $openidVal = $_GET['openid'] ? $_GET['openid'] : "201312050";
+        echo replaceStr(authcode($openidVal,'ENCODE','',"25200"));
     }
-
 
     /*
      *绑定验证，如果已绑定返回学号，否则发送绑定提醒并exit
+     *@param $wuChat 微信api接口实例 负责回复消息 注：如果该值为null，则$reture必须是false
      *@param $openidVal 根据openidVal值判断是否以绑定
      *@param $return 默认false不返回数据 直接微信回复绑定提醒。反之true则返回false
      */
@@ -205,7 +206,7 @@ class LoginController extends Controller {
     public function doLogout($weChat){
         $Openid = M("openId"); // 实例化User对象
         $where['openid'] = ':openid';   //参数绑定
-        $Openid->where($where)->bind(':openid',$weChat->getRevFrom())->delete(); // 删除id为5的用户数据
+        $Openid->where($where)->bind(':openid',$weChat->getRevFrom())->delete();
 
         $weChat->text("取消绑定成功。\n期待你下次绑定，我会做的更好。")->reply();
         S($weChat->getRevFrom().'_do',null);   //删除缓存

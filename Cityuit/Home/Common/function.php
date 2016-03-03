@@ -68,7 +68,7 @@ function authcode($string, $operation = 'DECODE', $key = '', $expiry = 0) {
 }
 
 /*
- *加密后的密文处在字符/，web请求不方便，所以先替换
+ *加密后的密文处在字符/，在thinkphp url中/会被作为键值分割，所以先替换
  *@param String $str 密文
  *@param boolean $replace ture表示将 "/"替换成"+00+00+" false则反之
  */

@@ -62,7 +62,7 @@ class IndexController extends Controller {
                                 break;
                             case "tomorrow":
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-                                $weChat->text($id)->reply();
+                                A('Students')->dealSchedule($weChat,$id,1);
                                 break;
                             case "today":
                                 /* $weChat->text("我是课表")->reply(); */
@@ -72,8 +72,8 @@ class IndexController extends Controller {
                             case "wall":
                                 $weChat->text("表白墙")->reply();
                                 break;
-                            case "lost":
-                                $weChat->text("寻物平台")->reply();
+                            case "cet":
+                                $weChat->text("四六级")->reply();
                                 break;
                             case "express":
                                 A('Campus')->dealExpress($weChat);
@@ -88,7 +88,9 @@ class IndexController extends Controller {
                                 $weChat->text("饭卡挂失")->reply();
                                 break;
                             case "change":
-                                $weChat->text("信息更新")->reply();
+                                /* $weChat->text("信息更新")->reply(); */
+                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom(), true);  //实例化Login控制器调用方法,如果存在返回学号值，不存在
+                                A('Help')->updateInfo($weChat, $id);    //方法通过$id确认是否有绑定过
                                 break;
                             case "box":
                                 $weChat->text("城院盒子")->reply();
