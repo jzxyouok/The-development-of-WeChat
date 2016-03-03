@@ -56,6 +56,20 @@ class CampusController extends Controller {
     }
 
     /*
+     *小助手微信墙
+     */
+    public function assistor_wall()
+    {
+        $title = '小助手微信墙';
+        $description = '表白，吐槽，心愿~';
+        $picUrl = 'https://csxyxzs.sinaapp.com/img/wall.jpg';
+        $url = "http://csxywxq.sinaapp.com/w/";
+
+        assistor_echo_news($title, $description, $picUrl, $url);
+        exit;
+    }
+
+    /*
      *处理四六级查询接口
      */
     public function daelCet(){
@@ -65,13 +79,15 @@ class CampusController extends Controller {
     public function httpGetCet(){
         $ch = curl_init();
         $url = "http://www.chsi.com.cn/cet/query?zkzh=211150152201126&xm=张坤";
-        /* curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:120.27.53.164', 'CLIENT-IP:120.27.53.164')); */
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:120.27.53.164', 'CLIENT-IP:120.27.53.164'));
+
+        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11"); 
         curl_setopt($ch, CURLOPT_REFERER, "http://www.chsi.com.cn/cet/");
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($ch, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
         curl_setopt($ch, CURLOPT_PROXY, "58.222.254.11"); //代理服务器地址
         curl_setopt($ch, CURLOPT_PROXYPORT, 3128); //代理服务器端口
-        //curl_setopt($ch, CURLOPT_PROXYUSERPWD, ":"); //http代理认证帐号，username:password的格式
+        /* //curl_setopt($ch, CURLOPT_PROXYUSERPWD, ":"); //http代理认证帐号，username:password的格式 */
         curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); //使用http代理模式
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );

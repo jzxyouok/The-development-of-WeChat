@@ -69,9 +69,9 @@ class SettingController extends Controller {
                     "name" => "校园服务",
                     "sub_button" => array (
                         0 => array (
-                            "type" => "click",
+                            "type" => "view",
                             "name" => "表白墙",
-                            "key" => "wall"
+                            "url" => "http://csxywxq.sinaapp.com/w/"
                         ),
                         1 => array (
                             "type" => "click",
@@ -109,14 +109,14 @@ class SettingController extends Controller {
                             "key" => "change"
                         ),
                         2 => array (
-                            "type" => "click",
+                            "type" => "view",
                             "name" => "城院盒子",
-                            "key" => "box"
+                            "url" => "http://fir.im/citybox"
                         ),
                         3 => array (
-                            "type" => "click",
+                            "type" => "view",
                             "name" => "关于我们",
-                            "key" => "about"
+                            "url" => "http://2.cityuit.applinzi.com"
                         ),
                         4 => array (
                             "type" => "click",

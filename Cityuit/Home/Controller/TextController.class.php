@@ -13,6 +13,8 @@ class TextController extends Controller {
     public $route_list=array(
         "kuaidi"=>"A('Campus')->resetExpress",
         "exit"=>"A('Help')->exitHelp",
+        "kb"=>"A('Students')->dealSchedule",
+        "week"=>"A('Students')->showWeekSchedule",
         "closehelp"=>"assistor_close_help",
         "test"=>"assistor_test",
         "bd"=>"assistor_student_bind",
@@ -27,11 +29,9 @@ class TextController extends Controller {
         "weather"=>"assistor_weather",
         "fj"=>"assistor_holiday",
         "cj"=>"assistor_grade",
-        "kb"=>"assistor_kb",
         "st"=>"assistor_canteen",
         "qbst"=>"assistor_canteen_all",
         "teacherbd"=>"assistor_teacher_bind",
-        "week"=>"assistor_week_kb",
         "general_course"=>"assistor_general_course",
         "citybox"=>"assistor_citybox",
         "vod"=>"assistor_vod",
@@ -42,8 +42,16 @@ class TextController extends Controller {
         "game"=>"assistor_game",
     );
 
-    public function dealText($weChat){
-        $mesText = $weChat->getRevContent();
+    /*
+     *文本语音控制接入接口
+     *@param $type 0 => 文本  1 => 语音
+     */
+    public function dealText($weChat, $type = 0){
+        if($type == 0){
+            $mesText = $weChat->getRevContent();
+        }else{
+            $mesText = preg_replace('/[！]/', '', $weChat->getRevContent());
+        }
         $operate=$this->reduce_route($mesText);
         $funcname = $operate[0];
         $params = $operate[1];
@@ -53,8 +61,8 @@ class TextController extends Controller {
             if(count($operate) == 1){   //数组一位时代表没有参数
                 eval($this->route_list[$funcname].'($weChat);');   //eval将字符串转换为效的代码执行，必须以;结尾
             }
-            else{
-                $this->route_list[$funcname]($params);
+            else{  //有参数，查课表
+                eval($this->route_list[$funcname].'($weChat,$params);');   //eval将字符串转换为效的代码执行，必须以;结尾
             }
         }else{
             //查看缓存中是否有操作
@@ -83,10 +91,25 @@ class TextController extends Controller {
 
 
     public function reduce_route($form_Content){
-        if(strtolower($form_Content)=="help"){
+        if( $form_Content=="快递" || $form_Content=="快递查询" || strtolower($form_Content)=="kd" || strtolower($form_Content)=="kuaidi" ){
+            return array("kuaidi");
+        }
+        if($form_Content=="课表" || $form_Content=="今天课表" || $form_Content=="今天" || strtolower($form_Content)=="jtkb" || strtolower($form_Content)=="kb" || strtolower($form_Content)=="jt"){
+            return array("kb", 0);
+        }
+        if($form_Content=="明天" || $form_Content=="明天课表" || strtolower($form_Content)=="mt"){
+            return array("kb", 1);
+        }
+        if($form_Content=="后天" || $form_Content=="后天课表" || strtolower($form_Content)=="ht"){
+            return array("kb", 2);
+        }
+        if( $form_Content=="周课表" || strtolower($form_Content)=="week" ){
+            return array("week");
+        }
+        if(strtolower($form_Content)=="help" || $form_Content=="帮助" || strtolower($form_Content)=="bz"){
             return array("help");
         }
-        if(strtolower($form_Content)=="exit" || strtolower($form_Content)=="q"){
+        if(strtolower($form_Content)=="exit" || strtolower($form_Content)=="q" || $form_Content=="退出"){
             return array("exit");
         }
         if(strtolower($form_Content)=="test"){
@@ -116,9 +139,6 @@ class TextController extends Controller {
         if(strtolower($form_Content)=="cet" || $form_Content=="四六级" || $form_Content=="四六级成绩"|| $form_Content=="四级" || $form_Content=="六级"){
             return array("cet");
         }
-        if( $form_Content=="快递" || $form_Content=="快递查询" || strtolower($form_Content)=="kd" || strtolower($form_Content)=="kuaidi" ){
-            return array("kuaidi");
-        }
         if( $form_Content=="哈哈" || $form_Content=="笑话" || strtolower($form_Content=="joke") ){
             return array("joke");
         }
@@ -134,15 +154,6 @@ class TextController extends Controller {
         if($form_Content=="本学期成绩" || $form_Content=="最新成绩"){
             return array("cj", 1);
         }
-        if($form_Content=="课表" || $form_Content=="今天课表" || $form_Content=="今天" || strtolower($form_Content)=="jtkb" || strtolower($form_Content)=="kb"){
-            return array("kb", 0);
-        }
-        if($form_Content=="明天" || $form_Content=="明天课表" || strtolower($form_Content)=="mt"){
-            return array("kb", 1);
-        }
-        if($form_Content=="后天" || $form_Content=="后天课表" || strtolower($form_Content)=="ht"){
-            return array("kb", 2);
-        }
         if(strtolower($form_Content)=="st" || $form_Content=="食堂" || $form_Content=="订餐电话"){
             return array("st");
         }
@@ -151,9 +162,6 @@ class TextController extends Controller {
         }
         if( $form_Content=="教师绑定" || strtolower($form_Content)=="teacher" ){
             return array("teacherbd");
-        }
-        if( $form_Content=="周课表" || strtolower($form_Content)=="week" ){
-            return array("week");
         }
         if( $form_Content=="通识课" || $form_Content=="选修课" || $form_Content=="选修" ){
             return array("general_course");

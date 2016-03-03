@@ -19,8 +19,9 @@ class IndexController extends Controller {
                     exit;
                     break;
                 case WeChatApi::MSGTYPE_VOICE:
-                    $content = $weChat->getRevContent();
-                    $weChat->text($content)->reply();
+                    /* $content = $weChat->getRevContent(); */
+                    /* $weChat->text($content)->reply(); */
+                    A('Text')->dealText($weChat, 1);
                     exit;
                     break;
                 case WeChatApi::MSGTYPE_VIDEO:
@@ -62,16 +63,16 @@ class IndexController extends Controller {
                                 break;
                             case "tomorrow":
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-                                A('Students')->dealSchedule($weChat,$id,1);
+                                A('Students')->dealSchedule($weChat,1,$id);
                                 break;
                             case "today":
                                 /* $weChat->text("我是课表")->reply(); */
                                 $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //实例化Login控制器调用方法,如果存在返回学号值，不存在方法已将提醒绑定发送，并停止程序
-                                A('Students')->dealSchedule($weChat,$id);
+                                A('Students')->dealSchedule($weChat,0,$id);
                                 break;
-                            case "wall":
-                                $weChat->text("表白墙")->reply();
-                                break;
+                            /* case "wall": */  //直接跳转
+                            /*     $weChat->text("表白墙")->reply(); */
+                            /*     break; */
                             case "cet":
                                 $weChat->text("四六级")->reply();
                                 break;
@@ -116,8 +117,7 @@ class IndexController extends Controller {
         }else{
             /* echo $_SERVER['HTTP_HOST']; */
             //确认不是微信发送的请求
-            echo 'Hello World';
-            $weChat1 = new WeChatApi();
+            $this->display();   //输出关于我们主页
         }
     }
 }

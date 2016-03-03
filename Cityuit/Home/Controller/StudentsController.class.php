@@ -13,9 +13,11 @@ class StudentsController extends Controller {
     /*
      *获取课表处理
      */
-    public function dealSchedule($weChat,$studentno,$offset = 0){
+    public function dealSchedule($weChat,$offset = 0,$studentno = 0){
         /* public function dealSchedule(){ */
         /*     $studentno = I('s'); */
+
+        $studentno = $studentno == 0 ? A('Login')->hasBind($weChat, $weChat->getRevFrom()) : $studentno;
 
         $scheduleVal = $this->hasSchedule($studentno);   //获取本地课表
         if($scheduleVal){
@@ -86,16 +88,35 @@ class StudentsController extends Controller {
                 $scheduleSend[] = $haveNo;   //添加没有课程
             }
 
+            $auth = replaceStr(authcode($studentno,'ENCODE','',25200));
             $allWeek = array(
-                $auth = replaceStr(authcode($studentno,'ENCODE'),'',25200),
                 'Title'=>'点此chuo进一周课表 ^_^|||',
-                'Url'=> $_SERVER['HTTP_HOST'].U("Students/weekSchedule?auth=$auth")
+                'Url'=> $_SERVER['HTTP_HOST'].U("Students/weekSchedule?auth=$auth&week=$week")
             );
             $scheduleSend[] = $allWeek;   //添加尾巴
             $weChat->news($scheduleSend)->reply();
         }else{
             $weChat->text("放假阶段，开开心心玩耍吧！(∩＿∩)")->reply();
         }
+    }
+
+    /*
+     *查询周课表提示
+     */
+    public function showWeekSchedule($weChat, $offset = 0){
+        $week = $this->calcWeek(date("Y-m-d",strtotime('+'.$offset.' day')));      //获得查询日期的周数，日期同上处理
+        $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());
+        $auth = replaceStr(authcode($studentno,'ENCODE','',25200));
+        $bind = array(
+            "0"=>array(
+                'Title'=>'周课表',
+                'Description'=>"可以把这条消息加入收藏哦！直接打开就能看",
+                'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/schedule.png',
+                'Url'=> $_SERVER['HTTP_HOST'].U("Students/weekSchedule?auth=$auth&week=$week")
+            ),
+         );
+        $weChat->news($bind)->reply();
+
     }
 
     /*
@@ -249,6 +270,7 @@ class StudentsController extends Controller {
         $auth = replaceStr($authGet, false);  //将替换的字符换回来
         $studentno = authcode($auth,'DECODE');   //只有带学号请求才是有效的
         if(!$studentno){
+           echo "<h3>学号有误</h3>";
             exit;
         }
         if($week>20&&$week<0){
