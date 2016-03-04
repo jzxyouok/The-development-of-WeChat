@@ -15,10 +15,9 @@ class TextController extends Controller {
         "exit"=>"A('Help')->exitHelp",
         "kb"=>"A('Students')->dealSchedule",
         "week"=>"A('Students')->showWeekSchedule",
-        "closehelp"=>"assistor_close_help",
+        "bd"=>"A('Login')->dealBind",
+        "jc"=>"A('Login')->dealUnBind",
         "test"=>"assistor_test",
-        "bd"=>"assistor_student_bind",
-        "jc"=>"assistor_student_remove",
         "tscx"=>"assistor_lib",
         "mxp"=>"assistor_gift",
         "ks"=>"assistor_exam",
@@ -50,7 +49,7 @@ class TextController extends Controller {
         if($type == 0){
             $mesText = $weChat->getRevContent();
         }else{
-            $mesText = preg_replace('/[！]/', '', $weChat->getRevContent());
+            $mesText = preg_replace('/[！]/', '', $weChat->getRevContent());  //每次语音转换会加上！，所以。
         }
         $operate=$this->reduce_route($mesText);
         $funcname = $operate[0];
@@ -84,7 +83,7 @@ class TextController extends Controller {
                     break;
                 }  //如果回复的不是确认。则执行后续的帮助提示
             default:
-                $weChat->text("有疑问，请输入关键词【帮助】查询。")->reply();
+                $weChat->text("有疑问，请输入【帮助】查询。")->reply();
             }
         }
     }
@@ -112,14 +111,14 @@ class TextController extends Controller {
         if(strtolower($form_Content)=="exit" || strtolower($form_Content)=="q" || $form_Content=="退出"){
             return array("exit");
         }
-        if(strtolower($form_Content)=="test"){
-            return array("test");
-        }
-        if( $form_Content=="绑定" || strtolower($form_Content)=="bd" ){
+        if( $form_Content=="绑定" || strtolower($form_Content)=="bd" || $form_Content=="绑定帐号" ){
             return array("bd");
         }
         if( $form_Content=="解除" || $form_Content=="取消绑定" || $form_Content=="解除绑定" || strtolower($form_Content)=="jc" ){
             return array("jc");
+        }
+        if(strtolower($form_Content)=="test"){
+            return array("test");
         }
         if( $form_Content=="图书" || strtolower($form_Content)=="tscx" || $form_Content=="图书馆" || $form_Content=="书籍查询" || $form_Content=="图书查询"){
             return array("tscx");

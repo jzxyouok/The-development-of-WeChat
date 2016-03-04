@@ -20,6 +20,7 @@ class WeChatApi{
 
 	const API_URL_PREFIX = 'https://api.weixin.qq.com/cgi-bin';
 	const AUTH_URL = '/token?grant_type=client_credential&';
+	const CALLBACKSERVER_GET_URL = '/getcallbackip?';
 	const MENU_CREATE_URL = '/menu/create?';
 	const MENU_GET_URL = '/menu/get?';
 	const MENU_DELETE_URL = '/menu/delete?';
@@ -454,6 +455,26 @@ class WeChatApi{
 		}
 		return false;
     }
+
+	/**
+	 * 获取微信服务器IP地址列表
+	 * @return array('127.0.0.1','127.0.0.1')
+	 */
+	public function getServerIp(){
+		if (!$this->access_token && !$this->checkAuth()) return false;
+		$result = $this->http_get(self::API_URL_PREFIX.self::CALLBACKSERVER_GET_URL.'access_token='.$this->access_token);
+		if ($result)
+		{
+			$json = json_decode($result,true);
+			if (!$json || isset($json['errcode'])) {
+				$this->errCode = $json['errcode'];
+				$this->errMsg = $json['errmsg'];
+				return false;
+			}
+			return $json['ip_list'];
+		}
+		return false;
+	}
 
 	/**
 	 * 获取access_token

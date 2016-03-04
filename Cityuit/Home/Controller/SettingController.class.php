@@ -133,4 +133,17 @@ class SettingController extends Controller {
             echo '<h1>按钮设置失败</h1><h4>错误编号：'.$weChat->errCode.'；错误信息：'.$weChat->errMsg.'</h4>';
         }
     }
+
+    //获取服务器IP群 array
+    public function getServerIp(){
+        $weChat = new WeChatApi();
+        $Ip = $weChat->getServerIp();
+        if($Ip){
+            echo '<h1>IP获取成功</h1>';
+            dump($Ip);
+        }else{
+            echo '<h1>IP获取失败</h1><h4>错误编号：'.$weChat->errCode.'；错误信息：'.$weChat->errMsg.'</h4>';
+        }
+    }
+
 }

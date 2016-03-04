@@ -152,7 +152,7 @@ class LoginController extends Controller {
      *@param $openidVal 根据openidVal值判断是否以绑定
      *@param $return 默认false不返回数据 直接微信回复绑定提醒。反之true则返回false
      */
-    public function hasBind($weChat = null, $openidVal='0', $return=false){
+    public function hasBind($weChat = null, $openidVal='0', $return=false){   //为什么这里要第二个参数，有时调用接口没有$weChat对象
         $Openid = M('openId');
         $where['openid'] = ':openid';   //参数绑定
         $oId = $Openid->where($where)->bind(':openid',$openidVal)->find();
@@ -201,6 +201,17 @@ class LoginController extends Controller {
     }
 
     /*
+     *绑定处理
+     */
+    public function dealBind($weChat){
+        $isBind = $this->hasBind($weChat, $weChat->getRevFrom(), true);
+        if($isBind){
+            $weChat->text("你已经绑定，可以选择查询个人信息啦。")->reply();
+        }else{
+            $this->showBind($weChat, $weChat->getRevFrom());
+        }
+    }
+    /*
      *解除绑定调用接口，只删除tp_open_id表
      */
     public function doLogout($weChat){
@@ -208,14 +219,14 @@ class LoginController extends Controller {
         $where['openid'] = ':openid';   //参数绑定
         $Openid->where($where)->bind(':openid',$weChat->getRevFrom())->delete();
 
-        $weChat->text("取消绑定成功。\n期待你下次绑定，我会做的更好。")->reply();
+        $weChat->text("取消绑定成功。\n期待你下次绑定，我们会做的更好。")->reply();
         S($weChat->getRevFrom().'_do',null);   //删除缓存
     }
 
     /*
-     *单击取消绑定处理
+     *取消绑定处理
      */
-    public function dealBind($weChat){
+    public function dealUnBind($weChat){
         $isBind = $this->hasBind($weChat, $weChat->getRevFrom(), true);
         if($isBind){
             $weChat->text("你确定要解除绑定吗，抛弃我么/可怜？欢迎提意见。\n\n回复【确认】取消绑定\n回复【exit】退出操作")->reply();

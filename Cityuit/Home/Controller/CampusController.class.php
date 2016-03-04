@@ -76,7 +76,7 @@ class CampusController extends Controller {
     }
 
 
-    public function httpGetCet(){
+    public function httpGtCet(){
         $ch = curl_init();
         $url = "http://www.chsi.com.cn/cet/query?zkzh=211150152201126&xm=张坤";
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:120.27.53.164', 'CLIENT-IP:120.27.53.164'));
@@ -126,4 +126,53 @@ class CampusController extends Controller {
                                         echo explode(',', $str);
 
     }
+
+
+    /*
+     *四六级爬虫接口
+     */
+    public function httpGetCet(){
+        header("content-Type: text/html; charset=utf-8");
+        ignore_user_abort();
+
+        $url='http://www.chsi.com.cn/cet/';
+
+        $header[]='Host:www.chsi.com.cn';
+        $header[]='Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8';
+        $header[]='Referer:http://www.chsi.com.cn/cet/';
+        $header[]='User-Agent:Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36';
+        //$header[]='X-FORWARDED-FOR:120.27.53.164';
+
+        //$header[]='X-Requested-With:XMLHttpRequest';
+        //
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,$url);
+        curl_setopt($ch, CURLOPT_HEADER,true);
+        curl_setopt($ch, CURLOPT_NOBODY,true);
+        //curl_setopt($ch, CURLOPT_HTTPHEADER, $headerc);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+        $html=curl_exec($ch);
+        curl_close($ch);
+        preg_match('#Set\-Cookie: (.*?);#i',$html,$matchs);
+
+        print_r($matchs);
+
+        $url='http://www.chsi.com.cn/cet/query?zkzh=211150152201126&xm=张坤';
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,$url);
+        curl_setopt($ch, CURLOPT_HEADER,true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+        //curl_setopt($ch, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
+        //curl_setopt($ch, CURLOPT_PROXY, "115.148.71.4:9000"); //代理服务器地址
+        curl_setopt($ch,CURLOPT_PROXY,'180.106.229.241:80');
+        /* //curl_setopt($ch, CURLOPT_PROXYUSERPWD, ":"); //http代理认证帐号，username:password的格式 */
+        //curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); //使用http代理模式
+        curl_setopt($ch, CURLOPT_COOKIE,$matchs[1]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,false);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
 }

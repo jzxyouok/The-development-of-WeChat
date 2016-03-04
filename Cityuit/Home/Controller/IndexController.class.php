@@ -100,7 +100,7 @@ class IndexController extends Controller {
                                 $weChat->text("关于我们")->reply();
                                 break;
                             case "bind":
-                                A('Login')->dealBind($weChat);
+                                A('Login')->dealUnBind($weChat);
                                 break;
                             default:
                                 $weChat->text("你说什么")->reply();
