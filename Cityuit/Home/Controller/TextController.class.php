@@ -17,6 +17,10 @@ class TextController extends Controller {
         "week"=>"A('Students')->showWeekSchedule",
         "bd"=>"A('Login')->dealBind",
         "jc"=>"A('Login')->dealUnBind",
+        "wall"=>"A('Campus')->loveWall",
+        "citybox"=>"A('Help')->cityBox",
+        "update"=>"A('Help')->updateInfo",
+        "help"=>"A('Help')->dealHelp",
         "test"=>"assistor_test",
         "tscx"=>"assistor_lib",
         "mxp"=>"assistor_gift",
@@ -32,11 +36,9 @@ class TextController extends Controller {
         "qbst"=>"assistor_canteen_all",
         "teacherbd"=>"assistor_teacher_bind",
         "general_course"=>"assistor_general_course",
-        "citybox"=>"assistor_citybox",
         "vod"=>"assistor_vod",
         "statistic_st"=>"assistor_count_st",
         "order_food"=>"assistor_order_food",
-        "wall"=>"assistor_wall",
         "random_food"=>"assistor_random_food",
         "game"=>"assistor_game",
     );
@@ -51,6 +53,11 @@ class TextController extends Controller {
         }else{
             $mesText = preg_replace('/[！]/', '', $weChat->getRevContent());  //每次语音转换会加上！，所以。
         }
+
+        if(S($weChat->getRevFrom().'_do') == 'library') {   //为什么图书查询的动作要提前，避免和功能同名的图书没办法查询。
+            A('Campus')->checkLibrary($weChat, $mesText);
+        }
+
         $operate=$this->reduce_route($mesText);
         $funcname = $operate[0];
         $params = $operate[1];
@@ -67,21 +74,27 @@ class TextController extends Controller {
             //查看缓存中是否有操作
             switch ( S($weChat->getRevFrom().'_do') ) {
             case 'express':
-                if(isExpress($weChat->getRevContent())){     //单号简单验证
-                    A('Campus')->checkExpress($weChat, $weChat->getRevContent());
-                    S($weChat->getRevFrom().'_spress',$weChat->getRevContent(),'86400');   //将单号存入缓存，默认一天时间
+                if(isExpress($mesText)){     //单号简单验证
+                    A('Campus')->checkExpress($weChat, $mesText);
+                    S($weChat->getRevFrom().'_spress',$mesText,'86400');   //将单号存入缓存，默认一天时间
                 }else{
                     $weChat->text("单号无法识别，重新输入。\n回复【exit】退出操作。")->reply();
                 }
                 break;
             case 'updateinfo':
-                A('Help')->dealUpdate($weChat);
+                if($mesText == '确认'){
+                    A('Help')->dealUpdate($weChat);
+                }else{
+                    $weChat->text("有疑问，请输入【帮助】查询。")->reply();
+                }
                 break;
             case 'unbind':
-                if($weChat->getRevContent() == '确认'){
+                if($mesText == '确认'){
                     A('Login')->doLogout($weChat);  //调用解绑方法
-                    break;
-                }  //如果回复的不是确认。则执行后续的帮助提示
+                }else{
+                    $weChat->text("有疑问，请输入【帮助】查询。")->reply();
+                }
+                break;
             default:
                 $weChat->text("有疑问，请输入【帮助】查询。")->reply();
             }
@@ -116,6 +129,15 @@ class TextController extends Controller {
         }
         if( $form_Content=="解除" || $form_Content=="取消绑定" || $form_Content=="解除绑定" || strtolower($form_Content)=="jc" ){
             return array("jc");
+        }
+        if( stristr($form_Content,"表白") || stristr($form_Content,"吐槽") || stristr($form_Content,"心愿") || stristr($form_Content,"墙")){
+            return array("wall");
+        }
+        if( $form_Content=="城院盒子" || $form_Content=="盒子" || strtolower($form_Content)=="citybox" ){
+            return array("citybox");
+        }
+        if( $form_Content=="信息更新" || $form_Content=="更新" || strtolower($form_Content)=="gx" ){
+            return array("update");
         }
         if(strtolower($form_Content)=="test"){
             return array("test");
@@ -164,9 +186,6 @@ class TextController extends Controller {
         }
         if( $form_Content=="通识课" || $form_Content=="选修课" || $form_Content=="选修" ){
             return array("general_course");
-        }
-        if( $form_Content=="城院盒子" || $form_Content=="盒子" || strtolower($form_Content)=="citybox" ){
-            return array("citybox");
         }
         if( $form_Content=="vod更新" || $form_Content=="vod视频" || strtolower($form_Content)=="vod" ){
             return array("vod");

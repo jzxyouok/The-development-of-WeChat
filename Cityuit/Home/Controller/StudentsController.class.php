@@ -13,11 +13,10 @@ class StudentsController extends Controller {
     /*
      *获取课表处理
      */
-    public function dealSchedule($weChat,$offset = 0,$studentno = 0){
+    public function dealSchedule($weChat,$offset = 0){
         /* public function dealSchedule(){ */
         /*     $studentno = I('s'); */
-
-        $studentno = $studentno == 0 ? A('Login')->hasBind($weChat, $weChat->getRevFrom()) : $studentno;
+        $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //如果没有绑定直接exit
 
         $scheduleVal = $this->hasSchedule($studentno);   //获取本地课表
         if($scheduleVal){
@@ -59,7 +58,6 @@ class StudentsController extends Controller {
         $dateMonth = date("m月d日",strtotime('+'.$offset.' day'));   //获得查询日期中文
         $week = $this->calcWeek(date("Y-m-d",strtotime('+'.$offset.' day')));      //获得查询日期的周数，日期同上处理
         $dateWeek = ' 周'.$this->getWeek(date("Y-m-d",strtotime('+'.$offset.' day')), 'cn');   //星期几  中文
-
         if(0 < $week && $week < 21){
             $scheduleSend = array();
 
@@ -179,7 +177,7 @@ class StudentsController extends Controller {
         if($Lang == 'cn'){
             $arr = array('天','一','二','三','四','五','六');
         }else{
-            $arr = array('Sun','Mon','Tus','Wed','Thu','Fri','Sat');
+            $arr = array('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
         }
         return $arr[date('w',strtotime($date))];
     }
@@ -302,5 +300,19 @@ class StudentsController extends Controller {
 
         $this->assign($res);
         $this->display();
+    }
+
+    /*
+     *处理考试时间接口
+     */
+    public function dealTeam($weChat){
+        $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());
+        $week = $this->calcWeek(date("Y-m-d",strtotime('+0day')));      //获得查询日期的周数，日期同上处理
+        if(0 < $week && $week < 21){
+            $weChat->text("当前不是考试周！学习不是一朝一夕的事情，需要平时积累，需要平时的勤学苦练。我们一起加油！")->reply();
+        }else{
+            //考试安排开发
+        }
+        exit;
     }
 }

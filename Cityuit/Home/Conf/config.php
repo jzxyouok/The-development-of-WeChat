@@ -32,7 +32,7 @@ return array(
 
     //自定义常量
 
-    'START_DATE_OF_SCHOOL' => '2016-2-29',   //开学日期，每学期需要手动修改
+    'START_DATE_OF_SCHOOL' => '2016-3-6',   //开学前一天日期，每学期需要手动修改
 
     /* 'CITY_LINK' => 'http://xxxxxx',   //校网登录验证接口 */
 	/* 'WECHAT_TOKEN' => "xxxxxx", */

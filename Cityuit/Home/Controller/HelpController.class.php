@@ -18,9 +18,16 @@ class HelpController extends Controller {
     }
 
     /*
+     *帮助提示
+     */
+    public function dealHelp($weChat){
+        $weChat->text("帮助详情")->reply();
+    }
+    /*
      *接收更新信息控制，提示
      */
-    public function updateInfo($weChat, $id){
+    public function updateInfo($weChat){
+        $id = A('Login')->hasBind($weChat, $weChat->getRevFrom(), true);  //实例化Login控制器调用方法,如果存在返回学号值，不存在
         if(!$id){
             $weChat->text("你没有绑定个人学号信息，绑定后才可以个人信息查询，欢迎绑定。")->reply();
         }else{   
@@ -62,5 +69,22 @@ class HelpController extends Controller {
 
         //提醒
         $weChat->text("信息更新完成，请重新绑定查询！")->reply();
+    }
+
+    /*
+     *小助手盒子
+     */
+    public function cityBox($weChat)
+    {
+        $box = array(
+            "0"=>array(
+                'Title' => '城院盒子',
+                'Description'=>"安卓手机打开后请点击右上角在浏览器中打开，否者可能无法下载。\n苹果手机请在APP Store中搜索“城院小助手”下载。",
+                'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/box.png',
+                'Url'=> 'http://fir.im/citybox'
+            ),
+         );
+        $weChat->news($box)->reply();
+        exit;
     }
 }

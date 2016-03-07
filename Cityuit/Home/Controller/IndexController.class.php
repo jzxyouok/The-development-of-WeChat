@@ -49,55 +49,38 @@ class IndexController extends Controller {
                         //自定义菜单按钮
                         $eventKey = $weChat->getRevEventKey();
                         switch ($eventKey) {
-                            case "library":
-                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-                                $weChat->text($id)->reply();
+                            case "classroom":
+                                $weChat->text("自习教室")->reply();
                                 break;
                             case "exam":
-                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-                                $weChat->text($id)->reply();
+                                A('Students')->dealTeam($weChat);
                                 break;
                             case "score":
-                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-                                $weChat->text($id)->reply();
+                                A('Students')->dealTeam($weChat);
                                 break;
                             case "tomorrow":
-                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-                                A('Students')->dealSchedule($weChat,1,$id);
+                                A('Students')->dealSchedule($weChat,1);
                                 break;
                             case "today":
-                                /* $weChat->text("我是课表")->reply(); */
-                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //实例化Login控制器调用方法,如果存在返回学号值，不存在方法已将提醒绑定发送，并停止程序
-                                A('Students')->dealSchedule($weChat,0,$id);
+                                A('Students')->dealSchedule($weChat,0);
                                 break;
-                            /* case "wall": */  //直接跳转
-                            /*     $weChat->text("表白墙")->reply(); */
-                            /*     break; */
                             case "cet":
                                 $weChat->text("四六级")->reply();
+                                break;
+                            case "library":
+                                A('Campus')->askLibrary($weChat);
                                 break;
                             case "express":
                                 A('Campus')->dealExpress($weChat);
                                 break;
-                            case "classroom":
-                                $weChat->text("自习教室")->reply();
-                                break;
                             case "canteen":
                                 $weChat->text("食堂菜单")->reply();
                                 break;
-                            case "loss":
-                                $weChat->text("饭卡挂失")->reply();
+                            case "help":
+                                A('Help')->dealHelp($weChat);    //方法通过$id确认是否有绑定过
                                 break;
                             case "change":
-                                /* $weChat->text("信息更新")->reply(); */
-                                $id = A('Login')->hasBind($weChat, $weChat->getRevFrom(), true);  //实例化Login控制器调用方法,如果存在返回学号值，不存在
-                                A('Help')->updateInfo($weChat, $id);    //方法通过$id确认是否有绑定过
-                                break;
-                            case "box":
-                                $weChat->text("城院盒子")->reply();
-                                break;
-                            case "about":
-                                $weChat->text("关于我们")->reply();
+                                A('Help')->updateInfo($weChat);    //方法通过$id确认是否有绑定过
                                 break;
                             case "bind":
                                 A('Login')->dealUnBind($weChat);

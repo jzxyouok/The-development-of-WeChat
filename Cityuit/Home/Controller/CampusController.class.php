@@ -18,6 +18,40 @@ class CampusController extends Controller {
     }
 
     /*
+     *发送提醒输入图书接口
+     */
+    public function askLibrary($weChat){
+        $weChat->text("请输入书名（也可以输入关键字）。\n\n或输入【exit】退出操作。")->reply();
+        S($weChat->getRevFrom().'_do','library','120');      //提醒输入图书时间预设2分钟 
+    }
+
+    /*
+     *发送快递查询接口
+     */
+    public function checkLibrary(){
+        $Library=M('Library');
+        $where['book_name']=array('like',(String)$bookKey.'%');
+        $where['book_name']=array('like','%'.(String)$bookKey);
+        $where['book_name']=array('like','%'.(String)$bookKey.'%');
+        $Library->where($where)->select();
+        echo $Library->getLastSql();
+        /* $weChat->text($Library->getLastSql())->reply(); */
+        exit;
+        /* $url = "http://m.kuaidi100.com/index_all.html?postid=".$expressid; */
+        /* $title = '快递单号：'.$expressid; */
+        /* $ex = array( */
+        /*     "0"=>array( */
+        /*         'Title'=> $title, */
+        /*         'Description'=>"为了方便查询，自动记录单号。\n\n查询其它快递单号，回复【快递】", */
+        /*         'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/kuaidi.png', */
+        /*         'Url'=> $url, */
+        /*     ), */
+        /*  ); */
+        /* $weChat->news($ex)->reply(); */
+        /* S($weChat->getRevFrom().'_do',null);   //删除操作缓存 */
+    }
+
+    /*
      *快递消息处理
      */
     public function dealExpress($weChat){
@@ -58,14 +92,17 @@ class CampusController extends Controller {
     /*
      *小助手微信墙
      */
-    public function assistor_wall()
+    public function loveWall($weChat)
     {
-        $title = '小助手微信墙';
-        $description = '表白，吐槽，心愿~';
-        $picUrl = 'https://csxyxzs.sinaapp.com/img/wall.jpg';
-        $url = "http://csxywxq.sinaapp.com/w/";
-
-        assistor_echo_news($title, $description, $picUrl, $url);
+        $wall = array(
+            "0"=>array(
+                'Title' => '小助手微信墙',
+                'Description'=>'表白，吐槽，心愿~',
+                'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/wall.jpg',
+                'Url'=> 'http://csxywxq.sinaapp.com/w/'
+            ),
+         );
+        $weChat->news($wall)->reply();
         exit;
     }
 

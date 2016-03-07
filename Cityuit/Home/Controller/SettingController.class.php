@@ -40,8 +40,8 @@ class SettingController extends Controller {
                     "sub_button" => array (
                         0 => array (
                             "type" => "click",
-                            "name" => "图书馆",
-                            "key" => "library"
+                            "name" => "自习室",
+                            "key" => "classroom"
                         ),
                         1 => array (
                             "type" => "click",
@@ -80,13 +80,13 @@ class SettingController extends Controller {
                         ),
                         2 => array (
                             "type" => "click",
-                            "name" => "快递查询",
-                            "key" => "express"
+                            "name" => "图书馆",
+                            "key" => "library"
                         ),
                         3 => array (
                             "type" => "click",
-                            "name" => "自习教室",
-                            "key" => "classroom"
+                            "name" => "快递查询",
+                            "key" => "express"
                         ),
                         4 => array (
                             "type" => "click",
@@ -100,8 +100,8 @@ class SettingController extends Controller {
                     "sub_button" => array (
                         0 => array (
                             "type" => "click",
-                            "name" => "饭卡挂失",
-                            "key" => "loss"
+                            "name" => "帮助",
+                            "key" => "help"
                         ),
                         1 => array (
                             "type" => "click",
