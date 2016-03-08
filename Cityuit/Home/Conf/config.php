@@ -34,16 +34,10 @@ return array(
 
     'START_DATE_OF_SCHOOL' => '2016-3-6',   //开学前一天日期，每学期需要手动修改
 
-    'CITY_LINK' => 'http://120.27.53.146:5000/api/',   //校网接口
     /* 'CITY_LINK' => 'http://xxxxxx',   //校网登录验证接口 */
-	'WECHAT_TOKEN' => "csxyxzs",
-    'WECHAT_APPID' => "wx4ff4d9df9c2d688a",     //AppID(应用ID) 为了安全只有在使用的时候设置
-    'WECHAT_APPSECRET' => "b255b255a3cb281e591ad64dd279391f",      //AppSecret(应用密钥)
 	/* 'WECHAT_TOKEN' => "xxxxxx", */
     /* 'WECHAT_APPID' => "xxxxxx",      //AppID(应用ID) 为了安全只有在使用的时候设置 */
     /* 'WECHAT_APPSECRET' => "xxxxxx",      //AppSecret(应用密钥) */
 
-    'AUTH_CODE_KEY' => "b255b255a3cb281e591ad64dd279391f",     //为加密算法提供key值
     /* 'AUTH_CODE_KEY' => "xxxxxx",     //为加密算法提供key值 */
-    'AUTH_CODE_TIME' => "600",     //key值有效时间
 );
