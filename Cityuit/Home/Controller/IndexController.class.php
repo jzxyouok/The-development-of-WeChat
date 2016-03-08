@@ -56,7 +56,7 @@ class IndexController extends Controller {
                                 A('Students')->dealTeam($weChat);
                                 break;
                             case "score":
-                                A('Students')->dealTeam($weChat);
+                                A('Students')->dealDefaultScore($weChat);
                                 break;
                             case "tomorrow":
                                 A('Students')->dealSchedule($weChat,1);

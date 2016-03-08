@@ -11,6 +11,162 @@ class StudentsController extends Controller {
     }
 
     /*
+     *按钮获取课表处理
+     */
+    public function dealDefaultScore($weChat){
+
+        $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //如果没有绑定直接exit
+        $scoreVal = $this->hasScore($studentno);   //获取本地课表
+        if($scoreVal){
+            /* $weChat->text($scoreVal)->reply(); */
+            $this->showScore($scoreVal, $weChat);
+        }else{
+            $password = A('Login')->getPassword($studentno);
+            $scoreValue = $this->getScoreFromLink($studentno, $password);
+            if($scoreValue){
+                /* $weChat->text($scoreValue)->reply(); */
+                $this->showScore($scoreValue, $weChat);
+            }else{
+                //出错可能1.校网崩了。2.获取课表每学期更新的值不匹配，没有返回值。3.用户的密码更换了。4.之后再找其它问题
+                $this->showBug($weChat);
+            }
+        }
+    }
+
+    /*
+     * 根据学号，密码获取成绩信息
+     */
+    public function getScoreFromLink($studentno, $password, $time){
+        //校网获取课表接口
+        //git@github.com:wuxiwei/csxylink.git
+        //curl -d 'username=学号&password=密码&action=动作&termstring=时间段' http://yourserver:port/api/grade
+        $time = $time == "" ? $this->getTimeString() : $time;
+        $student = array(     
+            'username'=>$studentno,
+            'password'=>$password,
+            'action'=>'update',
+            'termstring'=>$time
+        );      
+        $resultJson = http_post(C('CITY_LINK').'grade',$student);
+        $resultArr = json_decode($resultJson, true);
+        switch ( $resultArr['status'] ) {
+        case 'ok':    //登录成功
+            $scoreArr['grade'] = $resultArr['grade'];
+            if($scoreArr){  //如果课表为空。可能是校网接口需要修改的值变化了
+                $score = array(
+                    "studentno"=>$studentno,
+                    "score"=>json_encode($scoreArr,JSON_UNESCAPED_UNICODE),  //参数作用中文编码
+                    "time"=>$time,
+                );
+                $this->addScore($score);
+                return json_encode($scoreArr,JSON_UNESCAPED_UNICODE);   //以JSON格式传入所以也以JSON格式返回
+            }else{
+                return false; 
+            }
+            break;
+        case 'School network connection failure':  //校网问题
+            return false;
+            break;
+        default:
+            return false;
+        }
+
+    }
+
+    /*
+     *将校网获取的课表存到本地
+     */
+    public function addScore($score = array()){
+        if($score){
+            $Score = M('Score');
+            $Score->data($score)->add();
+        }
+    }
+
+    /*
+     *检验查询格式
+     */
+
+    /*
+     *发送成绩格式化
+     */
+    public function showScore($scoreVal, $weChat, $time = ""){
+        $time = $time == "" ? $this->getTimeString() : $time;
+        $scoreArr = json_decode($scoreVal, true)['grade'];
+
+        //判断有没有课
+        $hava = false;
+        $scoreString = "";
+        for($i=0 ; $i<count($scoreArr) ; $i++){
+            $have = true;
+            $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']."\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."\n\n";
+        }
+        if(!$have){
+            $scoreString .= "课程还没有出来，敬请期待！\n\n";
+        }
+        $scoreString .= "回复【成绩】查看更多学期课表";
+
+        $scoreSend = array();  
+        $scoreTop = array(
+            'Title'=>' '.$time,
+        );
+        $scoreSend[] = $scoreTop;
+        $scoreBack = array(
+            'Title'=>$scoreString,
+        );
+        $scoreSend[] = $scoreBack;
+
+        $weChat->news($scoreSend)->reply();
+    }
+
+    /*
+     *判断本地是否有成绩，有返回成绩
+     *@param string $studentno 学号
+     */
+    public function hasScore($studentno = "", $time = ""){
+        $time = $time == "" ? $this->getTimeString() : $time;
+        $Score = M('Score');
+        $where['studentno']=$studentno;
+        $where['time']=$time;
+        $scoreVal = $Score->where($where)->find();
+        if($scoreVal){
+            return $scoreVal['score'];
+        }else{
+            /* return $Score->getLastSql(); */
+            return false;
+        }
+    }
+
+    /*
+     *获取最新的课表时间，即上学期时间段
+     */
+    public function getTimeString(){
+        $Date_1=date("Y-m-d");  //获取当天时间
+        $Date_2 = $this->calcTestWeek();   //获取考试周时间
+        $d1 = strtotime($Date_1);
+        $d2 = strtotime($Date_2);
+
+        $year = date('Y', $d2);
+        $mouth = date('m', $d2);
+        if($mouth>0 && $mouth<3)$num = 2;    //查上学期成绩
+        if($mouth>5 && $mouth<9)$num = 1;
+        $timeString = (String)($year-1).'-'.(String)($year).'学年第'.$num.'学期'; 
+        return $timeString;
+    }
+
+    /*
+     *计算考试周日期
+     *@param
+     */
+    public function calcTestWeek(){
+        $Date_1 = C('START_DATE_OF_SCHOOL');
+        $d1 = strtotime($Date_1);
+        $d2 = $d1 + 18*7*24*3600 + 24*3600;  //开学时间加上18周时间+1天时间
+        $testWeek = date('Y-m-d', $d2);
+        return $testWeek;
+    }
+
+    /*
      *获取课表处理
      */
     public function dealSchedule($weChat,$offset = 0){
@@ -86,7 +242,7 @@ class StudentsController extends Controller {
                 $scheduleSend[] = $haveNo;   //添加没有课程
             }
 
-            $auth = replaceStr(authcode($studentno,'ENCODE','',25200));
+            $auth = replaceStr(authcode($studentno,'ENCODE','',604800));
             $allWeek = array(
                 'Title'=>'点此chuo进一周课表 ^_^|||',
                 'Url'=> $_SERVER['HTTP_HOST'].U("Students/weekSchedule?auth=$auth&week=$week")
@@ -104,7 +260,7 @@ class StudentsController extends Controller {
     public function showWeekSchedule($weChat, $offset = 0){
         $week = $this->calcWeek(date("Y-m-d",strtotime('+'.$offset.' day')));      //获得查询日期的周数，日期同上处理
         $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());
-        $auth = replaceStr(authcode($studentno,'ENCODE','',25200));
+        $auth = replaceStr(authcode($studentno,'ENCODE','',604800));
         $bind = array(
             "0"=>array(
                 'Title'=>'周课表',
@@ -207,7 +363,7 @@ class StudentsController extends Controller {
         $student = array(     
             'username'=>$studentno,
             'password'=>$password,
-            'action'=>'get'
+            'action'=>'update'
         );      
         $resultJson = http_post(C('CITY_LINK').'schedule',$student);
         $resultArr = json_decode($resultJson, true);
@@ -268,11 +424,11 @@ class StudentsController extends Controller {
         $auth = replaceStr($authGet, false);  //将替换的字符换回来
         $studentno = authcode($auth,'DECODE');   //只有带学号请求才是有效的
         if(!$studentno){
-           echo "<h3>学号有误</h3>";
+           echo "<h3>链接失效请重新获取课表</h3>";
             exit;
         }
         if($week>20&&$week<0){
-           echo "<h3>课表出错</h3>";
+           echo "<h3>放假阶段，开开心心玩耍吧！(∩＿∩)</h3>";
            exit;
         }
         $scheduleJson = $this->hasSchedule($studentno);   //获取本地课表
