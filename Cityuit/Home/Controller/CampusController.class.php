@@ -10,14 +10,6 @@ class CampusController extends Controller {
     }
 
     /*
-     *如果是文本收到快递，默认删除缓存单号
-     */
-    public function resetExpress($weChat){
-        S($weChat->getRevFrom().'_spress',null);
-        $this->askExpress($weChat);
-    }
-
-    /*
      *发送提醒输入图书接口
      */
     public function askLibrary($weChat){
@@ -29,10 +21,11 @@ class CampusController extends Controller {
      *发送快递查询接口
      */
     public function checkLibrary(){
+/* $query_sql = "SELECT * FROM books where upper(book_name) like upper('%".$book_name."%') or upper(author_name) like upper('%".$book_name."%') LIMIT  $offset , $pagesize"; */
         $Library=M('Library');
-        $where['book_name']=array('like',(String)$bookKey.'%');
-        $where['book_name']=array('like','%'.(String)$bookKey);
-        $where['book_name']=array('like','%'.(String)$bookKey.'%');
+        $where['booktitle']=array('like',(String)$bookKey.'%');
+        $where['booktitle']=array('like','%'.(String)$bookKey);
+        $where['booktitle']=array('like','%'.(String)$bookKey.'%');
         $Library->where($where)->select();
         echo $Library->getLastSql();
         /* $weChat->text($Library->getLastSql())->reply(); */
@@ -50,6 +43,15 @@ class CampusController extends Controller {
         /* $weChat->news($ex)->reply(); */
         /* S($weChat->getRevFrom().'_do',null);   //删除操作缓存 */
     }
+
+    /*
+     *如果是文本收到快递，默认删除缓存单号
+     */
+    public function resetExpress($weChat){
+        S($weChat->getRevFrom().'_spress',null);
+        $this->askExpress($weChat);
+    }
+
 
     /*
      *快递消息处理
@@ -90,6 +92,63 @@ class CampusController extends Controller {
     }
 
     /*
+     *处理食堂查询
+     */
+    public function askShiting($weChat){
+        $weChat->text("请输入查询几食堂\n\n或输入【exit】退出操作。")->reply();
+        S($weChat->getRevFrom().'_do','shitang','120');      //缓存查几食堂 
+    }
+
+    /*
+     *返回食堂信息
+     */
+    public function dealShitang($weChat, $num){
+        $Shitang = M('Shitang');
+        if(strpos($num, "2")!==false || strpos($num, "二")!==false){   //查询二食堂
+            $where['loaction']="二食堂";
+        }else if(strpos($num, "3") || strpos($num, "三")){
+            $where['loaction']="三食堂";
+        }else{
+            $weChat->text("食堂不存在，请重新输入\n例：'2'或者'二'再或者'二食堂'\n\n或输入【exit】退出操作。")->reply();
+            exit;
+        }
+        $shitangArr = $Shitang->where($where)->select();
+        $this->showShitang($shitangArr);
+        /* $weChat->text('nihao')->reply(); */
+        S($weChat->getRevFrom().'_do',null);   //删除操作缓存
+    }
+
+    /*
+     *发送食堂档口信息格式化
+     */
+    public function showShitang($shitangArr){
+        $shitangup = "";
+        $shitangdown = "";
+        
+    }
+
+    public function ask(){
+        $Shitang = M('Shitang');
+            $where['loaction']="二食堂";
+        $shitangArr = $Shitang->where($where)->select();
+        dump($shitangArr);
+    }
+
+    /*
+     *处理菜单查询
+     */
+    public function dealCaidan($weChat){
+        
+    }
+
+    /*
+     *返回菜单信息
+     */
+    public function showCaidan($weChat, $num){
+
+    }
+
+    /*
      *小助手微信墙
      */
     public function loveWall($weChat)
@@ -112,57 +171,6 @@ class CampusController extends Controller {
     public function daelCet(){
     }
 
-
-    public function httpGtCet(){
-        $ch = curl_init();
-        $url = "http://www.chsi.com.cn/cet/query?zkzh=211150152201126&xm=张坤";
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:120.27.53.164', 'CLIENT-IP:120.27.53.164'));
-
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11"); 
-        curl_setopt($ch, CURLOPT_REFERER, "http://www.chsi.com.cn/cet/");
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
-        curl_setopt($ch, CURLOPT_PROXY, "58.222.254.11"); //代理服务器地址
-        curl_setopt($ch, CURLOPT_PROXYPORT, 3128); //代理服务器端口
-        /* //curl_setopt($ch, CURLOPT_PROXYUSERPWD, ":"); //http代理认证帐号，username:password的格式 */
-        curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); //使用http代理模式
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
-        $sContent = curl_exec($ch);
-        $aStatus = curl_getinfo($ch);
-        curl_close($ch);
-        if(intval($aStatus["http_code"])==200){
-            //开启匹配正则取出内容
-            echo $sContent;
-        }else{
-            /* return false; */
-            /* echo 'nihao'.$aStatus["http_code"]; */
-            echo $sContent;
-        }
-    }
-    function cet(){
-        $name = '张坤';
-        $id = '211150152201126';
-            $name = urlencode(mb_convert_encoding($name, 'gb2312', 'utf-8'));
-                $post = 'id=' . $id . '&name=' . $name;
-                $url = "http://cet.99sushe.com/find";
-                    $ch = curl_init();
-                    curl_setopt($ch, CURLOPT_URL, $url);
-                        curl_setopt($ch, CURLOPT_REFERER, "http://cet.99sushe.com/");
-                        curl_setopt($ch, CURLOPT_POST, 1);
-                            curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                                curl_setopt($ch, CURLOPT_NOBODY, false);
-                                $str = curl_exec($ch);
-                                    curl_close($ch);
-                                    $str = iconv("GB2312", "UTF-8", $str);
-                                    if (strlen($str) < 10) {
-                                           echo 'nihao' ;        
-                                                return false;
-                                    }
-                                        echo explode(',', $str);
-
-    }
 
 
     /*

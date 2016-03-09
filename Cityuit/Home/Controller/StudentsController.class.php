@@ -11,25 +11,30 @@ class StudentsController extends Controller {
     }
 
     /*
-     *按钮获取课表处理
+     *获取课表处理
      */
-    public function dealDefaultScore($weChat){
+    public function dealScore($weChat, $type = 0){
 
-        $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //如果没有绑定直接exit
-        $scoreVal = $this->hasScore($studentno);   //获取本地课表
-        if($scoreVal){
-            /* $weChat->text($scoreVal)->reply(); */
-            $this->showScore($scoreVal, $weChat);
-        }else{
-            $password = A('Login')->getPassword($studentno);
-            $scoreValue = $this->getScoreFromLink($studentno, $password);
-            if($scoreValue){
-                /* $weChat->text($scoreValue)->reply(); */
-                $this->showScore($scoreValue, $weChat);
+        if($type == 0){
+            $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //如果没有绑定直接exit
+            $scoreVal = $this->hasScore($studentno);   //获取本地课表
+            if($scoreVal){
+                /* $weChat->text($scoreVal)->reply(); */
+                $this->showScore($scoreVal, $weChat);
             }else{
-                //出错可能1.校网崩了。2.获取课表每学期更新的值不匹配，没有返回值。3.用户的密码更换了。4.之后再找其它问题
-                $this->showBug($weChat);
+                $password = A('Login')->getPassword($studentno);
+                $scoreValue = $this->getScoreFromLink($studentno, $password);
+                if($scoreValue){
+                    /* $weChat->text($scoreValue)->reply(); */
+                    $this->showScore($scoreValue, $weChat);
+                }else{
+                    //出错可能1.校网崩了。2.获取课表每学期更新的值不匹配，没有返回值。3.用户的密码更换了。4.之后再找其它问题
+                    $this->showBug($weChat);
+                }
             }
+        }else{
+            $weChat->text("请输入查询年级\n------------------\n范例：大一上\n\n回复【exit】退出操作")->reply();
+            S($weChat->getRevFrom().'_do','score','180');      //提醒输成绩时间预设3分钟 
         }
     }
 
@@ -44,7 +49,7 @@ class StudentsController extends Controller {
         $student = array(     
             'username'=>$studentno,
             'password'=>$password,
-            'action'=>'update',
+            'action'=>'update',  //更新的方式查询
             'termstring'=>$time
         );      
         $resultJson = http_post(C('CITY_LINK').'grade',$student);
@@ -84,27 +89,106 @@ class StudentsController extends Controller {
     }
 
     /*
+     *文本查询成绩时返回成绩
+     */
+    public function getScore($weChat, $time){
+        $studentno = A('Login')->hasBind($weChat, $weChat->getRevFrom());  //如果没有绑定直接exit
+        $termString = $this->checkTermString($studentno, $time);
+        if($termString){
+            $scoreVal = $this->hasScore($studentno, $termString);   //获取本地课表
+            if($scoreVal){
+                /* $weChat->text($scoreVal)->reply(); */
+                $this->showScore($scoreVal, $weChat, $termString, 1);   //发送成绩按照模版
+            }else{
+                $password = A('Login')->getPassword($studentno);
+                $scoreValue = $this->getScoreFromLink($studentno, $password, $termString);
+                if($scoreValue){
+                    /* $weChat->text($scoreValue)->reply(); */
+                    $this->showScore($scoreValue, $weChat, $termString, 1);
+                }else{
+                    //出错可能1.校网崩了。2.获取课表每学期更新的值不匹配，没有返回值。3.用户的密码更换了。4.之后再找其它问题
+                    $this->showBug($weChat);
+                }
+            }
+        }else{
+            $weChat->text("成绩查询格式错误\n--------------------\n范例：大一上\n\n回复【exit】退出操作")->reply();
+        }
+        
+    }
+
+    /*
      *检验查询格式
      */
+    public function checkTermString($studentno, $time = ""){
+        $year = substr($studentno, 0, 4);
+        switch ( $time ) {
+            case '大一上':
+                $termstring = (String)$year."-".(String)($year+1)."学年第1学期";
+                return $termstring;
+                break;
+            case '大一下':
+                $termstring = (String)$year."-".(String)($year+1)."学年第2学期";
+                return $termstring;
+                break;
+            case '大二上':
+                $termstring = (String)($year+1)."-".(String)($year+2)."学年第1学期";
+                return $termstring;
+                break;
+            case '大二下':
+                $termstring = (String)($year+1)."-".(String)($year+2)."学年第2学期";
+                return $termstring;
+                break;
+            case '大三上':
+                $termstring = (String)($year+2)."-".(String)($year+3)."学年第1学期";
+                return $termstring;
+                break;
+            case '大三下':
+                $termstring = (String)($year+2)."-".(String)($year+3)."学年第2学期";
+                return $termstring;
+                break;
+            case '大四上':
+                $termstring = (String)($year+3)."-".(String)($year+4)."学年第1学期";
+                return $termstring;
+                break;
+            case '大四下':
+                $termstring = (String)($year+3)."-".(String)($year+4)."学年第2学期";
+                return $termstring;
+                break;
+            default:
+                return false;
+        }
+    }
 
     /*
      *发送成绩格式化
+     *@param $type => 0 表示按钮返回数据 $type => 1 表示文字返回数据
      */
-    public function showScore($scoreVal, $weChat, $time = ""){
+    public function showScore($scoreVal, $weChat, $time = "", $type = 0){
         $time = $time == "" ? $this->getTimeString() : $time;
         $scoreArr = json_decode($scoreVal, true)['grade'];
 
         //判断有没有课
         $hava = false;
         $scoreString = "";
+        $name = "";
         for($i=0 ; $i<count($scoreArr) ; $i++){
             $have = true;
-            $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']."\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."\n\n";
+            if($name != $scoreArr[(String)$i]['课程名称']){
+                $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']."\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."\n\n";
+                $name = $scoreArr[(String)$i]['课程名称'];
+            }else{
+                $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']." 【重修】\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."\n\n";
+            }
         }
         if(!$have){
             $scoreString .= "课程还没有出来，敬请期待！\n\n";
         }
-        $scoreString .= "回复【成绩】查看更多学期课表";
+        if($type == 0){
+            $scoreString .= "回复【成绩】查看更多学期课表";
+        }else if($type == 1){
+            $scoreString .= "请继续查询成绩\n回复【exit】退出操作";
+        }
+
 
         $scoreSend = array();  
         $scoreTop = array(
@@ -124,7 +208,7 @@ class StudentsController extends Controller {
      *@param string $studentno 学号
      */
     public function hasScore($studentno = "", $time = ""){
-        $time = $time == "" ? $this->getTimeString() : $time;
+        $time = $time == "" ? $this->getTimeString() : $time;   //没有使用默认上学期时间查询
         $Score = M('Score');
         $where['studentno']=$studentno;
         $where['time']=$time;
@@ -200,7 +284,7 @@ class StudentsController extends Controller {
                 'Title'=>'抱歉：出问题了 （┬＿┬）↘',
             ),
             "1"=>array(
-                'Title'=>"建议先试试【贴心帮助】->【信息更新】\n如果不能解决问题希望可以加入QQ308407868反馈群告诉给我们，我们会为大家尽快处理，谢谢支持。",
+                'Title'=>"建议再试一次，也可以试试【贴心帮助】->【信息更新】\n如果不能解决问题希望可以加入QQ308407868反馈群告诉给我们，我们会为大家尽快处理，谢谢支持。",
             ),
         );
         $weChat->news($class)->reply();
@@ -363,7 +447,7 @@ class StudentsController extends Controller {
         $student = array(     
             'username'=>$studentno,
             'password'=>$password,
-            'action'=>'update'
+            'action'=>'update'   //已更新的方式查询
         );      
         $resultJson = http_post(C('CITY_LINK').'schedule',$student);
         $resultArr = json_decode($resultJson, true);

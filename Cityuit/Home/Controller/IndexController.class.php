@@ -56,7 +56,7 @@ class IndexController extends Controller {
                                 A('Students')->dealTeam($weChat);
                                 break;
                             case "score":
-                                A('Students')->dealDefaultScore($weChat);
+                                A('Students')->dealScore($weChat);
                                 break;
                             case "tomorrow":
                                 A('Students')->dealSchedule($weChat,1);
@@ -74,7 +74,7 @@ class IndexController extends Controller {
                                 A('Campus')->dealExpress($weChat);
                                 break;
                             case "canteen":
-                                $weChat->text("食堂菜单")->reply();
+                                A('Campus')->askShiting($weChat);
                                 break;
                             case "help":
                                 A('Help')->dealHelp($weChat);    //方法通过$id确认是否有绑定过

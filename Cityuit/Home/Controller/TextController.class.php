@@ -21,6 +21,8 @@ class TextController extends Controller {
         "citybox"=>"A('Help')->cityBox",
         "update"=>"A('Help')->updateInfo",
         "help"=>"A('Help')->dealHelp",
+        "cj"=>"A('Students')->dealScore",
+        "st"=>"A('Campus')->askShiting",
         "test"=>"assistor_test",
         "tscx"=>"assistor_lib",
         "mxp"=>"assistor_gift",
@@ -31,8 +33,6 @@ class TextController extends Controller {
         "joke"=>"assistor_joke",
         "weather"=>"assistor_weather",
         "fj"=>"assistor_holiday",
-        "cj"=>"assistor_grade",
-        "st"=>"assistor_canteen",
         "qbst"=>"assistor_canteen_all",
         "teacherbd"=>"assistor_teacher_bind",
         "general_course"=>"assistor_general_course",
@@ -73,6 +73,15 @@ class TextController extends Controller {
         }else{
             //查看缓存中是否有操作
             switch ( S($weChat->getRevFrom().'_do') ) {
+            case 'shitang':
+                A('Campus')->dealShitang($weChat, $mesText);
+                break;
+            case 'caidan':
+                A('Campus')->dealCaidan($weChat, $mesText);
+                break;
+            case 'score':
+                A('students')->getScore($weChat, $mesText);
+                break;
             case 'express':
                 if(isExpress($mesText)){     //单号简单验证
                     A('Campus')->checkExpress($weChat, $mesText);
@@ -139,6 +148,12 @@ class TextController extends Controller {
         if( $form_Content=="信息更新" || $form_Content=="更新" || strtolower($form_Content)=="gx" ){
             return array("update");
         }
+        if($form_Content=="成绩" || stristr($form_Content,"成绩") || strtolower($form_Content)=="cj"){
+            return array("cj", 1);
+        }
+        if(strtolower($form_Content)=="st" || $form_Content=="食堂" || $form_Content=="食堂菜单" || $form_Content=="菜单"){
+            return array("st");
+        }
         if(strtolower($form_Content)=="test"){
             return array("test");
         }
@@ -169,15 +184,6 @@ class TextController extends Controller {
         if($form_Content=="放假" || $form_Content=="放假时间" || strtolower($form_Content)=="fjxx" || strtolower($form_Content)=="fj" ){
             return array("fj");
         }
-        if($form_Content=="历史成绩" || $form_Content=="上学期成绩" || strtolower($form_Content)=="cjcx" || $form_Content=="成绩"){
-            return array("cj", -1);
-        }
-        if($form_Content=="本学期成绩" || $form_Content=="最新成绩"){
-            return array("cj", 1);
-        }
-        if(strtolower($form_Content)=="st" || $form_Content=="食堂" || $form_Content=="订餐电话"){
-            return array("st");
-        }
         if(strtolower($form_Content)=="ls" || strtolower($form_Content)=="all" || $form_Content=="所有食堂" || $form_Content=="全部食堂" ){
             return array("qbst");
         }
@@ -196,9 +202,7 @@ class TextController extends Controller {
         if( $form_Content=="订餐" ){
             return array("order_food");
         }
-        if( stristr($form_Content,"表白") || stristr($form_Content,"吐槽") || stristr($form_Content,"心愿") || stristr($form_Content,"墙")){
-            return array("wall");
-        }
+        
         if( $form_Content=="今天吃什么" ){
             return array("random_food");
         }

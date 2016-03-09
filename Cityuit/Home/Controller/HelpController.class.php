@@ -67,6 +67,11 @@ class HelpController extends Controller {
         $where['studentno']=':studentno';
         $Schedule->where($where)->bind(':studentno',$studentno)->delete();
 
+        //删除tp_score表
+        $Score = M('Score');
+        $where['studentno']=':studentno';
+        $Score->where($where)->bind(':studentno',$studentno)->delete();
+
         //提醒
         $weChat->text("信息更新完成，请重新绑定查询！")->reply();
     }
