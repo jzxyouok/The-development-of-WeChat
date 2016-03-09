@@ -105,48 +105,69 @@ class CampusController extends Controller {
     public function dealShitang($weChat, $num){
         $Shitang = M('Shitang');
         if(strpos($num, "2")!==false || strpos($num, "二")!==false){   //查询二食堂
-            $where['loaction']="二食堂";
-        }else if(strpos($num, "3") || strpos($num, "三")){
-            $where['loaction']="三食堂";
+            $where['location']="二食堂";
+            $num = "二食堂";
+        }else if(strpos($num, "3")!==false || strpos($num, "三")!==false){
+            $where['location']="三食堂";
+            $num = "三食堂";
         }else{
             $weChat->text("食堂不存在，请重新输入\n例：'2'或者'二'再或者'二食堂'\n\n或输入【exit】退出操作。")->reply();
             exit;
         }
         $shitangArr = $Shitang->where($where)->select();
-        $this->showShitang($shitangArr);
-        /* $weChat->text('nihao')->reply(); */
-        S($weChat->getRevFrom().'_do',null);   //删除操作缓存
+        $this->showShitang($weChat, $shitangArr, $num);
     }
 
     /*
      *发送食堂档口信息格式化
      */
-    public function showShitang($shitangArr){
-        $shitangup = "";
-        $shitangdown = "";
-        
-    }
+    public function showShitang($weChat, $shitangArr, $num){
+        $shitangstring = $num."档口：\n";
+        $arr = array();
+        for($i=0 ; $i<count($shitangArr) ; $i++){
+                $shitangstring .= $i.". ".$shitangArr[$i]['name']."\n".$shitangArr[$i]['telephone']."\n";
+                $arr[$i]=$shitangArr[$i]['id'];    //存储档口编号
+        }
 
-    public function ask(){
-        $Shitang = M('Shitang');
-            $where['loaction']="二食堂";
-        $shitangArr = $Shitang->where($where)->select();
-        dump($shitangArr);
+        $shitangstring .= "\n回复对应编号查看菜单\n回复【exit】退出操作";
+
+        S($weChat->getRevFrom().'_do','caidan','120');   //菜单操作缓存
+        S($weChat->getRevFrom().'_date', json_encode($arr),'120');   //编号数据缓存
+        $weChat->text($shitangstring)->reply();
     }
 
     /*
      *处理菜单查询
      */
-    public function dealCaidan($weChat){
+    public function dealCaidan($weChat, $num){
         
+        $arr = S($weChat->getRevFrom().'_date');   //编号数据缓存
+        $arr = json_decode($arr);
+        $id = $arr[$num];   //获取编号对应的数据库中编号
+        if($id != ""){
+            $Caidan = M('Caidan');
+            $where['id']=$id;
+            $caidanArr = $Caidan->where($where)->select();
+            $this->showCaidan($weChat, $caidanArr);
+        }else{
+            $weChat->text("编号错误，重新输入\n\n或输入【exit】退出操作。")->reply();
+        }
     }
 
     /*
-     *返回菜单信息
+     *发送档口菜单信息格式化
      */
-    public function showCaidan($weChat, $num){
+    public function showCaidan($weChat, $caidanArr){
+        $caidanstring = "菜单：\n";
+        $arr = array();
+        for($i=0 ; $i<count($caidanArr) ; $i++){
+            $caidanstring .= $caidanArr[$i]['name']." ￥".$caidanArr[$i]['price']."\n";
+        }
 
+        S($weChat->getRevFrom().'_do',null);   //删除操作缓存
+        $weChat->text($caidanstring)->reply();
     }
+
 
     /*
      *小助手微信墙
