@@ -32,7 +32,7 @@ class IndexController extends Controller {
                     $location = $weChat->getRevGeo();
                     $Location_Y = $location[y];  //经度
                     $Location_X = $location[x];  //纬度
-                    $content = '你目前所在经度：'.$Location_Y.'，纬度：'.$Location_X.'。';
+                    $content = '你目前在经度：'.$Location_Y.'，纬度：'.$Location_X.'。';
                     $weChat->text($content)->reply();
                     exit;
                     break;
@@ -98,7 +98,6 @@ class IndexController extends Controller {
                     break;
             }
         }else{
-            /* echo $_SERVER['HTTP_HOST']; */
             //确认不是微信发送的请求
             $this->display();   //输出关于我们主页
         }

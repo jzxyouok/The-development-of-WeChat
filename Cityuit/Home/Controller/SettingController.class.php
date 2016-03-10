@@ -2,20 +2,12 @@
 namespace Home\Controller;
 use Think\Controller;
 use \Home\Model\WeChatApi;
+/*
+ *设置按钮，更新全院课表数据
+ */
 class SettingController extends Controller {
     public function index(){
         //$this->display();
-    }
-
-    public function testM(){
-        // 缓存数据300秒
-        $value = "nihao";
-        S('name',$value,30);
-    }
-    public function testQ(){
-        // 缓存数据300秒
-        $value = S('name');
-        echo $value;
     }
 
     public function getCustomize(){
@@ -144,6 +136,51 @@ class SettingController extends Controller {
         }else{
             echo '<h1>IP获取失败</h1><h4>错误编号：'.$weChat->errCode.'；错误信息：'.$weChat->errMsg.'</h4>';
         }
+    }
+
+    /*
+     *先将Public/Html/course.html文件内容改为最新的信息。调用此方法将课程信息存入数据库，供查用。
+     */
+    public function setCourse(){
+        //通过正则将页面中的信息提取
+        header("content-type:text/html;charset=utf-8");    
+        $conn=file_get_contents('./Public/Html/course.html');     //和index.php同一级目录
+        $preg = '/选课限制说明.*(.*?)<\/table>.*<\/form>/is';      //尽量匹配到所有课程的那部分即可，table中的第一栏行不需要就干脆排除在外
+        preg_match($preg, $conn, $out); 
+        $pregTable = $out[0];
+
+        $preg = '/<tr>.*?<\/tr>/is';
+        preg_match_all($preg, $pregTable, $out);   //全局匹配<tr>标签
+        $pregTr = $out[0];
+
+        $courseArr = Array();
+        for($i=0 ; $i<count($pregTr) ; $i++){
+            preg_match_all ("|<[^>]+>(.*)</[^>]+>|U", $pregTr[$i], $out, PREG_PATTERN_ORDER);
+            $courseArr[] = str_replace('&nbsp;','', $out[1][8]);    //将&nbsp;删除
+        }
+        dump($courseArr);    //$courseArr数组保存了所以教室用时
+
+        //提前完成后开始存储操作 
+        //先将所有教室存入数据库
+        $roomArr = Array();
+        for($i=0 ; $i<count($courseArr) ; $i++){
+            $room = explode(" ", $courseArr[$i])[3];
+            if($room && !in_array($room, $roomArr)){     //存在并且数组不包含该教室
+                $roomArr[] = $room;
+            }
+        }
+        /* dump($roomArr); */
+        /* $Classroom = M('Classroom'); */
+        /* if($Classroom->where(array("key"=>'room'))->count()){    //有就更新 */
+        /*     $data['value'] = json_encode($roomArr, JSON_UNESCAPED_UNICODE); */
+        /*     $Classroom->where(array("key"=>'room'))->save($data); // 根据条件更新记录 */
+        /* }else{ */
+        /*     $where['key'] = 'room'; */
+        /*     $where['value'] = json_encode($roomArr, JSON_UNESCAPED_UNICODE); */
+        /*     $Classroom->data($where)->add(); */ 
+        /* } */
+
+        //开始存取各时间段存在的课程
     }
 
 }

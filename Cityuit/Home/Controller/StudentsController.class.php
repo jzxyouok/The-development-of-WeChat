@@ -366,7 +366,7 @@ class StudentsController extends Controller {
             $time = strpos($value['classrom'], '教学楼') !== false ? "8:05-9:45" : "8:05-9:40";
             break;
         case '3-4':
-            $time = strpos($value['classrom'], '教学楼') !== false ? "10:10-11:50" : "8:05-9:40";
+            $time = strpos($value['classrom'], '教学楼') !== false ? "10:10-11:50" : "10:00-11:35";
             break;
         case '5-6':
             $time = strpos($value['classrom'], '教学楼') !== false ? "13:30-15:10" : "13:30-15:10";

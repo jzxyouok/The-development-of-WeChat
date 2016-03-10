@@ -158,10 +158,10 @@ class CampusController extends Controller {
      *发送档口菜单信息格式化
      */
     public function showCaidan($weChat, $caidanArr){
-        $caidanstring = "菜单：\n";
+        $caidanstring = "菜单：";
         $arr = array();
         for($i=0 ; $i<count($caidanArr) ; $i++){
-            $caidanstring .= $caidanArr[$i]['name']." ￥".$caidanArr[$i]['price']."\n";
+            $caidanstring .= "\n".$caidanArr[$i]['name']." ￥".$caidanArr[$i]['price'];
         }
 
         S($weChat->getRevFrom().'_do',null);   //删除操作缓存

@@ -39,5 +39,8 @@ return array(
     /* 'WECHAT_APPID' => "xxxxxx",      //AppID(应用ID) 为了安全只有在使用的时候设置 */
     /* 'WECHAT_APPSECRET' => "xxxxxx",      //AppSecret(应用密钥) */
 
+    /* 'BAIDUAPI_KEY' => "",   //百度api接口 */
+
     /* 'AUTH_CODE_KEY' => "xxxxxx",     //为加密算法提供key值 */
+    'AUTH_CODE_TIME' => "600",     //key值有效时间
 );
