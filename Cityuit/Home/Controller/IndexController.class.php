@@ -50,7 +50,7 @@ class IndexController extends Controller {
                         $eventKey = $weChat->getRevEventKey();
                         switch ($eventKey) {
                             case "classroom":
-                                $weChat->text("自习教室")->reply();
+                                A('Students')->dealSelfRoom($weChat);
                                 break;
                             case "exam":
                                 A('Students')->dealTeam($weChat);
@@ -64,20 +64,20 @@ class IndexController extends Controller {
                             case "today":
                                 A('Students')->dealSchedule($weChat,0);
                                 break;
+                            case "library":
+                                A('Campus')->askLibrary($weChat);
+                                break;
                             case "cet":
                                 $weChat->text("四六级")->reply();
                                 break;
-                            case "library":
-                                A('Campus')->askLibrary($weChat);
+                            case "weather":
+                                A('Campus')->dealWeather($weChat);
                                 break;
                             case "express":
                                 A('Campus')->dealExpress($weChat);
                                 break;
                             case "canteen":
                                 A('Campus')->askShiting($weChat);
-                                break;
-                            case "help":
-                                A('Help')->dealHelp($weChat);    //方法通过$id确认是否有绑定过
                                 break;
                             case "change":
                                 A('Help')->updateInfo($weChat);    //方法通过$id确认是否有绑定过

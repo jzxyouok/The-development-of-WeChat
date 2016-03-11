@@ -555,4 +555,160 @@ class StudentsController extends Controller {
         }
         exit;
     }
+
+
+    /*
+     *处理自习室查询
+     */
+    public function dealSelfRoom($weChat){
+    /* public function dealSelfRoom(){ */
+        $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。
+        /* $timeNow = strtotime("2016-03-11 11:40:00") - strtotime(date("Y-m-d"));   //现在时间。 */
+        $Classroom = M('Classroom');
+        $roomAll = $Classroom->where(array("key"=>'room'))->getField('value');
+        $roomArr = json_decode($roomAll, true);
+        sort($roomArr);    //对数组排序
+        if($timeNow < 29100 || $timeNow > 73500 || ($timeNow > 42600 && $timeNow < 48600)){   //早上，午饭，晚上时间
+            /* $roomArr = explode(",", $roomAll); */
+            for($i=0 ; $i<count($roomArr)-1 ; $i++){
+                if(strpos($roomArr[$i], "教学楼") !== false){    //该教室为教学楼教室
+                    $JX .= str_replace("教学楼", '', $roomArr[$i])." ";
+                }else if(strpos($roomArr[$i], "实验楼") !== false){
+                    $SY[] = str_replace('.', '', str_replace("实验楼", '', $roomArr[$i]))." ";   //全校课表中个别教室后面添加了"."，为了美观加了过滤
+                }
+            }
+            for($i=0 ; $i<count($SY) ; $i++){
+                if(strpos($SY[$i], "机房") !== false){    //该教室为教学楼机房
+                    $SYJF .= str_replace("机房", '', $SY[$i])." ";
+                }else if(strpos($SY[$i], "语音室") !== false){
+                    $SYYYS .= str_replace("语音室", '', $SY[$i])." ";
+                }else if(strpos($SY[$i], "JT") !== false){
+                    $SYJT .= str_replace("JT", '', $SY[$i])." ";
+                }else{
+                    $SYJS .= $SY[$i]." ";
+                }
+            }
+
+            $emptyJX = array(
+                'Title'=>"教学楼：\n".$JX,
+            );
+            $emptySYJS = array(
+                'Title'=>"实验楼教室：\n".$SYJS,
+            );
+            $emptySYJF = array(
+                'Title'=>"实验楼机房：\n".$SYJF,
+            );
+            $emptySYJT = array(
+                'Title'=>"实验楼阶梯：\n".$SYJT,
+            );
+            $emptySYYYS = array(
+                'Title'=>"实验楼语音室：\n".$SYYYS,
+            );
+            /* dump($emptyJX); */
+            /* dump($emptySY); */
+        }else{
+            $week = $this->calcWeek();
+            $day = date('w',strtotime(date("Y-m-d")));
+            $class = $this->backClass();
+            $classJX = substr($class,0,1);   //获取教学楼的上哪节课
+            $classSY = substr($class,2,1);   //获取实验楼的上哪节课
+            /* echo $week."   ".$day."   ".$class; */
+            if($classJX == $classSY || $classSY == 0){    //如果查寻时间教学楼和实验楼小节数一样，查一次即可
+                $Techroom = M('Techroom');
+                $where['week'] = $week;
+                $where['day'] = $day;
+                $where['class'] = $classJX;
+                $roomJX = $roomSY = $Techroom->where($where)->getField('room');
+            }else{
+                $Techroom = M('Techroom');
+                //因为实验课和教学课上课时间不同，所以分开处理。
+                //获取教学楼上课的教室。
+                $where['week'] = $week;
+                $where['day'] = $day;
+                $where['class'] = $classJX;
+                $roomJX = $Techroom->where($where)->getField('room');
+                
+                $where['week'] = $week;
+                $where['day'] = $day;
+                $where['class'] = $classSY;
+                $roomSY = $Techroom->where($where)->getField('room');
+            }
+            if($classSY == 0){
+                
+            }
+        }
+
+        $emptyMes = Array();
+        $top = array(
+            'Title'=>"当下一段时间内空闲的教室有：",
+        );
+        $end = array(
+            'Title'=>"回复【查自习】查看任意节课空教室",
+        );
+        $emptyMes[] = $top;
+        $emptyMes[] = $emptyJX;
+        $emptyMes[] = $emptySYJS;
+        $emptyMes[] = $emptySYJF;
+        $emptyMes[] = $emptySYJT;
+        $emptyMes[] = $emptySYYYS;
+        $emptyMes[] = $end;
+        $weChat->news($emptyMes)->reply();
+    }
+
+    /*
+     *返回所有教室
+     *@param $key = 0 返回教学楼所有教室 反之实验楼
+     */
+    public function backSY($key = 0){
+        $Classroom = M('Classroom');
+        $roomAll = $Classroom->where(array("key"=>'room'))->getField('value');
+        $roomArr = json_decode($roomAll, true);
+        sort($roomArr);    //对数组排序
+        for($i=0 ; $i<count($roomArr)-1 ; $i++){
+            if(strpos($roomArr[$i], "教学楼") !== false){    //该教室为教学楼教室
+                $JX .= str_replace("教学楼", '', $roomArr[$i])." ";
+            }else if(strpos($roomArr[$i], "实验楼") !== false){
+                $SY[] = str_replace('.', '', str_replace("实验楼", '', $roomArr[$i]))." ";   //全校课表中个别教室后面添加了"."，为了美观加了过滤
+            }
+        }
+    }
+
+    /*
+     *返回当前时间第几节课
+     *例：1,1 => 教学楼第一节，实验课第一节    4,0 => 教学楼第四节，实验楼没课
+     */
+    public function backClass(){
+        $back = "";
+        /* $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。 */
+        $timeNow = strtotime("2016-03-11 11:40:00") - strtotime(date("Y-m-d"));   //现在时间。
+        //预设教学楼每天的每节课上下课时间戳
+        $JXTime = array(29100, 31800, 32400, 35100, 36600, 39300, 39900, 42600, 48600, 51300, 51900, 54600, 55500,
+                        58200, 58800, 61500, 64800, 66900, 66900, 69000, 69600, 71400, 71400, 73500);
+        //处理第几节课时注意：每次把课下时间归结到下一小节课上，即课间也返回下一小节课。
+        //其中9-10，11-12手动的添加分割点，中间没有课间休息
+        for($i=1 ; $i<24 ; $i+=2){
+            if($timeNow < $JXTime[$i]){
+                $back .= (String)(($i+1)/2).",";
+                break;
+            } 
+        }
+
+        //预设实验楼每天的每节课上下课时间戳
+        $JXTime = array(29100, 31800, 32100, 34800, 36000, 38700, 39000, 41700, 48600, 51300, 51900, 54600, 55500,
+                        58200, 58800, 61500, 64800, 66900, 66900, 69000, 69600, 71400, 71400, 73500);
+        //处理第几节课时注意：每次把课下时间归结到下一小节课上，即课间也返回下一小节课。
+        //其中9-10，11-12手动的添加分割点，中间没有课间休息
+        //因为存在11点35分以后实验楼没课，所以在35分到50分这段时间返回0
+        if($timeNow > 41700 && $timeNow < 42600){
+            $back .= '0';
+        }else{
+            for($i=1 ; $i<24 ; $i+=2){
+                if($timeNow < $JXTime[$i]){
+                    $back .= (String)(($i+1)/2);
+                    break;
+                } 
+            }
+        }
+        return $back;
+    }
 }
