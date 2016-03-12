@@ -53,7 +53,10 @@ class TextController extends Controller {
         }else{
             $mesText = preg_replace('/[！]/', '', $weChat->getRevContent());  //每次语音转换会加上！，所以。
         }
-
+        
+        if(strtolower($mesText)=="exit" || strtolower($mesText)=="q" || $mesText=="退出"){
+            A('Help')->exitHelp($weChat);               //如果exit判断在后面，查图书的时候将无法退出操作。
+        }
         if(S($weChat->getRevFrom().'_do') == 'library') {   //为什么图书查询的动作要提前，避免和功能同名的图书没办法查询。
             A('Campus')->checkLibrary($weChat, $mesText);
         }

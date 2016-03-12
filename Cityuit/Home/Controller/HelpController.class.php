@@ -15,6 +15,7 @@ class HelpController extends Controller {
     public function exitHelp($weChat){
         S($weChat->getRevFrom().'_do',null);   //删除操作缓存
         $weChat->text("成功退出当前操作。有疑问，请输入【帮助】查询。")->reply();
+        exit;
     }
 
     /*

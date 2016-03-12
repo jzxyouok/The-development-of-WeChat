@@ -18,7 +18,7 @@ class CampusController extends Controller {
     }
 
     /*
-     *发送快递查询接口
+     *图书馆查询接口
      */
     public function checkLibrary(){
 /* $query_sql = "SELECT * FROM books where upper(book_name) like upper('%".$book_name."%') or upper(author_name) like upper('%".$book_name."%') LIMIT  $offset , $pagesize"; */
@@ -141,7 +141,7 @@ class CampusController extends Controller {
      */
     public function dealCaidan($weChat, $num){
         
-        $arr = S($weChat->getRevFrom().'_date');   //编号数据缓存
+        $arr = S($weChat->getRevFrom().'_date');   //编号数据缓存   这一步一般情况下必须紧跟上一步，不然没有数据，
         $arr = json_decode($arr);
         $id = $arr[$num];   //获取编号对应的数据库中编号
         if($id != ""){

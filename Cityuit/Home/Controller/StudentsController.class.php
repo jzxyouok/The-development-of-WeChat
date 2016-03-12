@@ -563,90 +563,134 @@ class StudentsController extends Controller {
     public function dealSelfRoom($weChat){
     /* public function dealSelfRoom(){ */
         $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。
-        /* $timeNow = strtotime("2016-03-11 11:40:00") - strtotime(date("Y-m-d"));   //现在时间。 */
-        $Classroom = M('Classroom');
-        $roomAll = $Classroom->where(array("key"=>'room'))->getField('value');
-        $roomArr = json_decode($roomAll, true);
-        sort($roomArr);    //对数组排序
+        /* $timeNow = strtotime("2016-03-11 11:40:00") - strtotime('2016-03-11');   //现在时间。 */
+        $JX = S('JXL') ? S('JXL') : $this->backAllRoom(0);    //先获取所有空教室，缓存有就缓存取，没有就数据库拿
+        $SY = S('SYL') ? S('SYL') : $this->backAllRoom(1);
+        /* $JX = $this->backAllRoom(0);    //想要更新缓存的数据，使用这两条 */
+        /* $SY = $this->backAllRoom(1); */
         if($timeNow < 29100 || $timeNow > 73500 || ($timeNow > 42600 && $timeNow < 48600)){   //早上，午饭，晚上时间
-            /* $roomArr = explode(",", $roomAll); */
-            for($i=0 ; $i<count($roomArr)-1 ; $i++){
-                if(strpos($roomArr[$i], "教学楼") !== false){    //该教室为教学楼教室
-                    $JX .= str_replace("教学楼", '', $roomArr[$i])." ";
-                }else if(strpos($roomArr[$i], "实验楼") !== false){
-                    $SY[] = str_replace('.', '', str_replace("实验楼", '', $roomArr[$i]))." ";   //全校课表中个别教室后面添加了"."，为了美观加了过滤
-                }
-            }
-            for($i=0 ; $i<count($SY) ; $i++){
-                if(strpos($SY[$i], "机房") !== false){    //该教室为教学楼机房
-                    $SYJF .= str_replace("机房", '', $SY[$i])." ";
-                }else if(strpos($SY[$i], "语音室") !== false){
-                    $SYYYS .= str_replace("语音室", '', $SY[$i])." ";
-                }else if(strpos($SY[$i], "JT") !== false){
-                    $SYJT .= str_replace("JT", '', $SY[$i])." ";
-                }else{
-                    $SYJS .= $SY[$i]." ";
-                }
-            }
-
-            $emptyJX = array(
-                'Title'=>"教学楼：\n".$JX,
-            );
-            $emptySYJS = array(
-                'Title'=>"实验楼教室：\n".$SYJS,
-            );
-            $emptySYJF = array(
-                'Title'=>"实验楼机房：\n".$SYJF,
-            );
-            $emptySYJT = array(
-                'Title'=>"实验楼阶梯：\n".$SYJT,
-            );
-            $emptySYYYS = array(
-                'Title'=>"实验楼语音室：\n".$SYYYS,
-            );
-            /* dump($emptyJX); */
-            /* dump($emptySY); */
+            $this->showEmptyroom($weChat, $JX, $SY);     //将数据传给显示模版
         }else{
-            $week = $this->calcWeek();
+            $week = $this->calcWeek();    //当前周
             $day = date('w',strtotime(date("Y-m-d")));
             $class = $this->backClass();
             $classJX = substr($class,0,1);   //获取教学楼的上哪节课
             $classSY = substr($class,2,1);   //获取实验楼的上哪节课
-            /* echo $week."   ".$day."   ".$class; */
-            if($classJX == $classSY || $classSY == 0){    //如果查寻时间教学楼和实验楼小节数一样，查一次即可
+            if($classJX == $classSY){    //如果查寻时间教学楼和实验楼小节数一样，查一次即可
                 $Techroom = M('Techroom');
                 $where['week'] = $week;
                 $where['day'] = $day;
+                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
                 $where['class'] = $classJX;
                 $roomJX = $roomSY = $Techroom->where($where)->getField('room');
+                $roomArr = $this->assortment($roomJX);
+                $roomJXArr = $roomArr['JX'];
+                $roomSYArr = $roomArr['SY'];
+                $emptyJXArr = $this->array_diff_fast($JX, $roomJXArr);    //函数用于取差，所有教室减去上课的教室
+                $emptySYArr = $this->array_diff_fast($SY, $roomSYArr);
+                /* dump($emptyJXArr); */
+                /* dump($emptySYArr); */
+                $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
+            }else if($classSY == 0){     //中午存在某时刻实验楼没有课，教学楼有课
+                $Techroom = M('Techroom');
+                $where['week'] = $week;
+                $where['day'] = $day;
+                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
+                $where['class'] = $classJX;
+                $roomJX = $Techroom->where($where)->getField('room');
+                $roomArr = $this->assortment($roomJX);    //只取教学楼的科
+                $roomJXArr = $roomArr['JX'];  //只取教学楼的课
+                $emptyJXArr = $this->array_diff_fast($JX, $roomJXArr);    //函数用于取差，所有教室减去上课的教室
+                $this->showEmptyroom($weChat, $emptyJXArr, $SY);     //将数据传给显示模版，实验楼没课所以直接给全部
             }else{
                 $Techroom = M('Techroom');
                 //因为实验课和教学课上课时间不同，所以分开处理。
                 //获取教学楼上课的教室。
                 $where['week'] = $week;
                 $where['day'] = $day;
+                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
                 $where['class'] = $classJX;
                 $roomJX = $Techroom->where($where)->getField('room');
+                $roomArr = $this->assortment($roomJX);
+                $roomJXArr = $roomArr['JX'];
+                $emptyJXArr = $this->array_diff_fast($JX, $roomJXArr);    //函数用于取差，所有教学楼教室减去上课的教室
                 
                 $where['week'] = $week;
                 $where['day'] = $day;
+                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
                 $where['class'] = $classSY;
                 $roomSY = $Techroom->where($where)->getField('room');
-            }
-            if($classSY == 0){
-                
+                $roomArr = $this->assortment($roomSY);
+                $roomSYArr = $roomArr['SY'];
+                $emptySYArr = $this->array_diff_fast($SY, $roomSYArr);     //实验楼课
+
+                $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
             }
         }
 
+    }
+
+    /*
+     *
+     */
+    public function array_diff_fast($data1, $data2) {
+        $data1 = array_flip($data1);
+        $data2 = array_flip($data2);
+        foreach($data2 as $hash => $key) {
+            if (isset($data1[$hash])) unset($data1[$hash]);
+
+        }
+        return array_flip($data1);
+    } 
+
+    /*
+     *负责发送自习室内容的模版
+     *@param array $JX 教学楼空教室
+     *@param array $SY 实验楼空教室
+     */
+    public function showEmptyroom($weChat, $JX, $SY){
+        $JX = array_merge($JX);     //经过筛选的教室，可能下标没有对齐，导致for循环终止，
+        $SY = array_merge($SY);     //array_merge传入一个参数时会将下标重新排序
+        for($i=0 ; $i<count($JX) ; $i++){ 
+            $JXJS .= $JX[$i]." ";
+        }
+        for($i=0 ; $i<count($SY) ; $i++){
+            if(strpos($SY[$i], "机房") !== false){    //该教室为教学楼机房
+                $SYJF .= str_replace("机房", '', $SY[$i])." ";
+            }else if(strpos($SY[$i], "语音室") !== false){
+                $SYYYS .= str_replace("语音室", '', $SY[$i])." ";
+            }else if(strpos($SY[$i], "JT") !== false){
+                $SYJT .= str_replace("JT", '', $SY[$i])." ";
+            }else{
+                $SYJS .= $SY[$i]." ";
+            }
+        }
+
+        $emptyJXJS = array(
+            'Title'=>"教学楼：\n".$JXJS,
+        );
+        $emptySYJS = array(
+            'Title'=>"实验楼教室：\n".$SYJS,
+        );
+        $emptySYJF = array(
+            'Title'=>"实验楼机房：\n".$SYJF,
+        );
+        $emptySYJT = array(
+            'Title'=>"实验楼阶梯：\n".$SYJT,
+        );
+        $emptySYYYS = array(
+            'Title'=>"实验楼语音室：\n".$SYYYS,
+        );
+        //发送装载
         $emptyMes = Array();
         $top = array(
-            'Title'=>"当下一段时间内空闲的教室有：",
+            'Title'=>"当前没课的教室有：",
         );
         $end = array(
             'Title'=>"回复【查自习】查看任意节课空教室",
         );
         $emptyMes[] = $top;
-        $emptyMes[] = $emptyJX;
+        $emptyMes[] = $emptyJXJS;
         $emptyMes[] = $emptySYJS;
         $emptyMes[] = $emptySYJF;
         $emptyMes[] = $emptySYJT;
@@ -656,20 +700,44 @@ class StudentsController extends Controller {
     }
 
     /*
+     *将数据库数据字符串，分类（实验楼和教学楼）
+     *return array
+     */
+    public function assortment($roomString){
+        $roomArr = explode(",", $roomString); 
+        for($i=0 ; $i<count($roomArr)-1 ; $i++){
+            if(strpos($roomArr[$i], "教学楼") !== false){    //该教室为教学楼教室
+                $Room['JX'][] = str_replace("教学楼", '', $roomArr[$i]);
+            }else if(strpos($roomArr[$i], "实验楼") !== false){
+                $Room['SY'][] = str_replace('.', '', str_replace("实验楼", '', $roomArr[$i]));   //全校课表中个别教室后面添加了"."，为了美观加了过滤
+            }
+        }
+        /* dump($Room); */
+        return $Room;
+    }
+
+    /*
      *返回所有教室
      *@param $key = 0 返回教学楼所有教室 反之实验楼
      */
-    public function backSY($key = 0){
+    public function backAllRoom($key = 0){
         $Classroom = M('Classroom');
         $roomAll = $Classroom->where(array("key"=>'room'))->getField('value');
         $roomArr = json_decode($roomAll, true);
         sort($roomArr);    //对数组排序
-        for($i=0 ; $i<count($roomArr)-1 ; $i++){
+        for($i=0 ; $i<count($roomArr) ; $i++){
             if(strpos($roomArr[$i], "教学楼") !== false){    //该教室为教学楼教室
-                $JX .= str_replace("教学楼", '', $roomArr[$i])." ";
+                $JX[] = str_replace("教学楼", '', $roomArr[$i]);
             }else if(strpos($roomArr[$i], "实验楼") !== false){
-                $SY[] = str_replace('.', '', str_replace("实验楼", '', $roomArr[$i]))." ";   //全校课表中个别教室后面添加了"."，为了美观加了过滤
+                $SY[] = str_replace('.', '', str_replace("实验楼", '', $roomArr[$i]));   //全校课表中个别教室后面添加了"."，为了美观加了过滤
             }
+        }
+        S('JXL',$JX,'86400');      //将所有的教室缓存，不用每次都去数据库查询，因为数据永远不会变化，所以时间可以久点 
+        S('SYL',$SY,'86400');      //将所有的教室缓存，不用每次都去数据库查询，因为数据永远不会变化，所以时间可以久点 
+        if($key == 0){
+            return $JX;
+        }else{
+            return $SY;
         }
     }
 
@@ -679,8 +747,8 @@ class StudentsController extends Controller {
      */
     public function backClass(){
         $back = "";
-        /* $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。 */
-        $timeNow = strtotime("2016-03-11 11:40:00") - strtotime(date("Y-m-d"));   //现在时间。
+        $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。
+        /* $timeNow = strtotime("2016-03-11 09:43:00") - strtotime('2016-03-11');   //测试时间。 */
         //预设教学楼每天的每节课上下课时间戳
         $JXTime = array(29100, 31800, 32400, 35100, 36600, 39300, 39900, 42600, 48600, 51300, 51900, 54600, 55500,
                         58200, 58800, 61500, 64800, 66900, 66900, 69000, 69600, 71400, 71400, 73500);
