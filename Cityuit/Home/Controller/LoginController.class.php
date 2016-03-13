@@ -244,7 +244,7 @@ class LoginController extends Controller {
         /*     "date" => Date("Y-m-d"), */
         /* ); */
         /* $a = $sql->add($date); */
-        $studentno= I('in',''); 
+        $openid= I('in',''); 
         /* $studentno = I('studentno',''); */ 
         /* $password = I('password',''); */
         /*     $idpass = M('idPass');  //先从本地数据库查询有没有之前绑定存在的帐号信息 */
@@ -252,10 +252,17 @@ class LoginController extends Controller {
         /*     $where['password'] = $password; */
         /*     $find = $idpass->where($where)->select(); */
         /*     dump($find); */
-        $Class = M('Class');
-        $where['studentno']=':studentno';
-        $classVal = $Class->where($where)->bind(':studentno',$studentno)->find();
-        echo $classVal;
+        /* $Class = M('Class'); */
+        /* $where['studentno']=':studentno'; */
+        /* $classVal = $Class->where($where)->bind(':studentno',$studentno)->find(); */
+        /* echo $classVal; */
+        echo $openid;
+        echo "nihao<br/>";
+        $Savecet = M('Savecet');
+        $where['openid'] = $openid;
+        $zkzhAll = $Savecet->where($where)->select();
+        /* return $zkzhAll; */
+        dump($zkzhAll);
         /* dump($sql->find()); */
         /* dump($sql->getField('studentno,password')); */
         /* $data1 = array('studentno'=>'201412052','password'=>'201412052'); */

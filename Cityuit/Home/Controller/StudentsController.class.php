@@ -338,6 +338,7 @@ class StudentsController extends Controller {
         }
     }
 
+
     /*
      *查询周课表提示
      */
@@ -357,6 +358,7 @@ class StudentsController extends Controller {
 
     }
 
+    
     /*
      *单节课处理样式 加时间判断
      */
@@ -460,7 +462,7 @@ class StudentsController extends Controller {
                     "schedule"=>json_encode($scheduleArr,JSON_UNESCAPED_UNICODE),  //参数作用中文编码
                 );
                 $this->addSchedule($schedule);
-                return json_encode($scheduleArr,JSON_UNESCAPED_UNICODE);   //以JSON格式传入所以也以JSON格式返回
+                return json_encode($scheduleArr, JSON_UNESCAPED_UNICODE);   //以JSON格式传入所以也以JSON格式返回
             }else{
                 return false; 
             }
@@ -558,87 +560,104 @@ class StudentsController extends Controller {
 
 
     /*
+     *查自习处理
+     */
+    public function askClass($weChat){
+        $weChat->text("请输入哪节小课（1~12）\n\n或输入【exit】退出操作。")->reply();
+        S($weChat->getRevFrom().'_do','emptyroom','120');      //提醒输入图书时间预设2分钟 
+        exit;
+    }
+
+    /*
+     *验证查自习的格式，正确则返回数据
+     */
+    public function checkClass($weChat, $class){
+        $c = array(1,2,3,4,5,6,7,8,9,10,11,12);
+        if(in_array($class, $c)){   //如果格式正确
+            $this->dealSelfRoom($weChat, $class);
+            S($weChat->getRevFrom().'_do',null);
+        }else{
+            $weChat->text("查询出错，请输入1~12之间的值\n\n或输入【exit】退出操作。")->reply();
+            exit;
+        }
+    }
+
+    /*
      *处理自习室查询
      */
-    public function dealSelfRoom($weChat){
+    public function dealSelfRoom($weChat, $class = 0){
     /* public function dealSelfRoom(){ */
-        $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。
-        /* $timeNow = strtotime("2016-03-11 11:40:00") - strtotime('2016-03-11');   //现在时间。 */
         $JX = S('JXL') ? S('JXL') : $this->backAllRoom(0);    //先获取所有空教室，缓存有就缓存取，没有就数据库拿
         $SY = S('SYL') ? S('SYL') : $this->backAllRoom(1);
         /* $JX = $this->backAllRoom(0);    //想要更新缓存的数据，使用这两条 */
         /* $SY = $this->backAllRoom(1); */
-        if($timeNow < 29100 || $timeNow > 73500 || ($timeNow > 42600 && $timeNow < 48600)){   //早上，午饭，晚上时间
-            $this->showEmptyroom($weChat, $JX, $SY);     //将数据传给显示模版
+        if($class == 0){
+            $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。
+            /* $timeNow = strtotime("2016-03-11 11:40:00") - strtotime('2016-03-11');   //现在时间。 */
+            if($timeNow < 29100 || $timeNow > 73500 || ($timeNow > 42600 && $timeNow < 48600)){   //早上，午饭，晚上时间
+                $this->showEmptyroom($weChat, $JX, $SY);     //将数据传给显示模版
+            }else{
+                $week = $this->calcWeek();    //当前周
+                $day = date('w',strtotime(date("Y-m-d")));
+                $class = $this->backClass();
+                $classJX = substr($class,0,1);   //获取教学楼的上哪节课
+                $classSY = substr($class,2,1);   //获取实验楼的上哪节课
+                if($classJX == $classSY){    //如果查寻时间教学楼和实验楼小节数一样，查一次即可
+                    $roomJX = $roomSY = $this->backClassroom($week, $day, $classJX);
+                    $roomArr = $this->assortment($roomJX);
+                    $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教室减去上课的教室
+                    $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);
+                    $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
+                }else if($classSY == 0){     //中午存在某时刻实验楼没有课，教学楼有课
+                    $roomJX = $this->backClassroom($week, $day, $classJX);
+                    $roomArr = $this->assortment($roomJX);    //只取教学楼的科
+                    $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //只取教学楼的课
+                    $this->showEmptyroom($weChat, $emptyJXArr, $SY);     //将数据传给显示模版，实验楼没课所以直接给全部
+                }else{
+                    //因为实验课和教学课上课时间不同，所以分开处理。
+                    //获取教学楼上课的教室。
+                    $roomJX = $this->backClassroom($week, $day, $classJX);
+                    $roomArr = $this->assortment($roomJX);
+                    $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教学楼教室减去上课的教室
+                    
+                    $roomSY = $this->backClassroom($week, $day, $classSY);
+                    $roomArr = $this->assortment($roomSY);
+                    $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);     //实验楼课
+
+                    $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
+                }
+            }
         }else{
             $week = $this->calcWeek();    //当前周
             $day = date('w',strtotime(date("Y-m-d")));
-            $class = $this->backClass();
-            $classJX = substr($class,0,1);   //获取教学楼的上哪节课
-            $classSY = substr($class,2,1);   //获取实验楼的上哪节课
-            if($classJX == $classSY){    //如果查寻时间教学楼和实验楼小节数一样，查一次即可
-                $Techroom = M('Techroom');
-                $where['week'] = $week;
-                $where['day'] = $day;
-                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
-                $where['class'] = $classJX;
-                $roomJX = $roomSY = $Techroom->where($where)->getField('room');
-                $roomArr = $this->assortment($roomJX);
-                $roomJXArr = $roomArr['JX'];
-                $roomSYArr = $roomArr['SY'];
-                $emptyJXArr = $this->array_diff_fast($JX, $roomJXArr);    //函数用于取差，所有教室减去上课的教室
-                $emptySYArr = $this->array_diff_fast($SY, $roomSYArr);
-                /* dump($emptyJXArr); */
-                /* dump($emptySYArr); */
-                $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
-            }else if($classSY == 0){     //中午存在某时刻实验楼没有课，教学楼有课
-                $Techroom = M('Techroom');
-                $where['week'] = $week;
-                $where['day'] = $day;
-                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
-                $where['class'] = $classJX;
-                $roomJX = $Techroom->where($where)->getField('room');
-                $roomArr = $this->assortment($roomJX);    //只取教学楼的科
-                $roomJXArr = $roomArr['JX'];  //只取教学楼的课
-                $emptyJXArr = $this->array_diff_fast($JX, $roomJXArr);    //函数用于取差，所有教室减去上课的教室
-                $this->showEmptyroom($weChat, $emptyJXArr, $SY);     //将数据传给显示模版，实验楼没课所以直接给全部
-            }else{
-                $Techroom = M('Techroom');
-                //因为实验课和教学课上课时间不同，所以分开处理。
-                //获取教学楼上课的教室。
-                $where['week'] = $week;
-                $where['day'] = $day;
-                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
-                $where['class'] = $classJX;
-                $roomJX = $Techroom->where($where)->getField('room');
-                $roomArr = $this->assortment($roomJX);
-                $roomJXArr = $roomArr['JX'];
-                $emptyJXArr = $this->array_diff_fast($JX, $roomJXArr);    //函数用于取差，所有教学楼教室减去上课的教室
-                
-                $where['week'] = $week;
-                $where['day'] = $day;
-                /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
-                $where['class'] = $classSY;
-                $roomSY = $Techroom->where($where)->getField('room');
-                $roomArr = $this->assortment($roomSY);
-                $roomSYArr = $roomArr['SY'];
-                $emptySYArr = $this->array_diff_fast($SY, $roomSYArr);     //实验楼课
-
-                $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
-            }
+            $roomJX = $roomSY = $this->backClassroom($week, $day, $class);
+            $roomArr = $this->assortment($roomJX);
+            $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教室减去上课的教室
+            $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);
+            $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr, $class);     //将数据传给显示模版
         }
-
     }
 
     /*
-     *
+     *根据周、星期、课返回上课教室
+     */
+    public function backClassroom($week, $day, $class){
+        $Techroom = M('Techroom');
+        $where['week'] = $week;
+        $where['day'] = $day;
+        /* $where['day'] = $day-1;    //测试时间记得将星期和周调到和测试时间一致 */
+        $where['class'] = $class;
+        return $Techroom->where($where)->getField('room');
+    }
+
+    /*
+     *将数组不同部分以数组形式返回
      */
     public function array_diff_fast($data1, $data2) {
         $data1 = array_flip($data1);
         $data2 = array_flip($data2);
         foreach($data2 as $hash => $key) {
             if (isset($data1[$hash])) unset($data1[$hash]);
-
         }
         return array_flip($data1);
     } 
@@ -648,7 +667,7 @@ class StudentsController extends Controller {
      *@param array $JX 教学楼空教室
      *@param array $SY 实验楼空教室
      */
-    public function showEmptyroom($weChat, $JX, $SY){
+    public function showEmptyroom($weChat, $JX, $SY, $class = 0){
         $JX = array_merge($JX);     //经过筛选的教室，可能下标没有对齐，导致for循环终止，
         $SY = array_merge($SY);     //array_merge传入一个参数时会将下标重新排序
         for($i=0 ; $i<count($JX) ; $i++){ 
@@ -683,9 +702,15 @@ class StudentsController extends Controller {
         );
         //发送装载
         $emptyMes = Array();
-        $top = array(
-            'Title'=>"当前没课的教室有：",
-        );
+        if($class != 0){
+            $top = array(
+                'Title'=>"今天第".$class."小节没课的教室有：",
+            );
+        }else{
+            $top = array(
+                'Title'=>"当前没课的教室有：",
+            );
+        }
         $end = array(
             'Title'=>"回复【查自习】查看任意节课空教室",
         );

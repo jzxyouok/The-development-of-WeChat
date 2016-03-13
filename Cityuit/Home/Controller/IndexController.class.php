@@ -68,7 +68,7 @@ class IndexController extends Controller {
                                 A('Campus')->askLibrary($weChat);
                                 break;
                             case "cet":
-                                $weChat->text("四六级")->reply();
+                                A('Campus')->dealCet($weChat);
                                 break;
                             case "weather":
                                 A('Campus')->dealWeather($weChat);

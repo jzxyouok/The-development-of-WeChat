@@ -27,6 +27,8 @@ class TextController extends Controller {
         "fj"=>"A('Help')->showHoliday",
         "game"=>"A('Help')->dealGame",
         "weather"=>"A('Campus')->dealWeather",
+        "findempty"=>"A('Students')->askClass",
+        "empty"=>"A('Students')->dealSelfRoom",
         "test"=>"assistor_test",
         "tscx"=>"assistor_lib",
         "mxp"=>"assistor_gift",
@@ -76,6 +78,8 @@ class TextController extends Controller {
         }else{
             //查看缓存中是否有操作
             switch ( S($weChat->getRevFrom().'_do') ) {
+            case 'emptyroom':
+                A('Students')->checkClass($weChat, $mesText);
             case 'shitang':
                 A('Campus')->dealShitang($weChat, $mesText);
                 break;
@@ -168,6 +172,12 @@ class TextController extends Controller {
         }
         if($form_Content=="天气" || $form_Content=="天气预报"|| $form_Content=="大连天气" || $form_Content=="明天天气" || strtolower($form_Content)=="tq" || strtolower($form_Content)=="weather" ){
             return array("weather");
+        }
+        if($form_Content=="自习室" || $form_Content=="自习"|| $form_Content=="空教室" || $form_Content=="教室" || strtolower($form_Content)=="zx" || strtolower($form_Content)=="zxs" ){
+            return array("empty");
+        }
+        if( $form_Content=="查自习" ){
+            return array("findempty");
         }
         if(strtolower($form_Content)=="test"){
             return array("test");

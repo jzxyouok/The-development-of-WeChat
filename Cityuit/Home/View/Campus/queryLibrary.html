@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>图书馆查询</title>
+    <link href="__PUBLIC__/Css/library.css" rel="stylesheet">
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- 可选的Bootstrap主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">图书查询结果</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="__APP__">关于我们</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="panel panel-default">
+          <php>
+            $sql = "SELECT * FROM tp_library where booktitle = '电脑办公速学教程'";
+            $rs = mysql_query($sql);
+            $row = mysql_fetch_array($rs, MYSQL_NUM);
+            echo $row[1];
+            $d = strtotime($tm);
+          </php>
+                <table class="table">
+                <tbody>
+                    <tr>
+                      <td>书名：Java程序开发教程<br/>作者：周建军等主编<br/>出版社：人民日报出版社<br/>出版时间：2015年11月<br/>藏书位置：三楼南</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!--下面是分页部分-->
+        <ul class="pagination">
+            <?php
+                global $total;
+                global $perNumber;
+                global $p;
+                $max_p = ceil($total/$perNumber);
+                if($p==1){
+                        echo"<li class='disabled'><a href='#'>&laquo;前一页</a>
+                        </li>";
+                    }else{
+                        $pp = $p - 1;
+                        echo"<li><a href='?p=$pp'>&laquo;前一页</a>
+                        </li>";
+                    }
+
+                for($it=1;$it<=5;$it=$it+1){
+                    if($p==$it){
+                        echo"<li class='active'><a href='?p=$it'>$it</a>
+                        </li>";
+                    }else{
+                        if($it>$max_p){
+                            echo"<li class='disabled'><a href='#'>$it</a>
+                            </li>";
+                        }else{
+                            echo"<li><a href='?p=$it'>$it</a>
+                            </li>";
+                        }
+                    }
+                }
+
+                if($p>=$max_p){
+                    echo"<li class='disabled'><a href='#'>&raquo;后一页</a>
+                    </li>";
+                }else{
+                    $np = $p + 1;
+                    echo"<li><a href='?p=$np'>&raquo;后一页</a>
+                    </li>";
+                }
+            ?>
+        </ul>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div id="footer" class="span12">
+                <p>♥ Do have faith in what you're doing.</p>
+                <p>Producted by <a href="__APP__">城市学院小助手</a> </p>
+            </div>  
+        </div>
+    </div>
+</body>
+</html>

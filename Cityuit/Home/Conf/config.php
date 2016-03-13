@@ -41,6 +41,10 @@ return array(
 
     /* 'BAIDUAPI_KEY' => "",   //百度api接口 */
 
+    /* 'QUERYCET_LINK' => "",   //四级查询接口 */
+
+    /* 'QUERYLIBRARY_LINK' => "",   //图书查询接口 */
+
     /* 'AUTH_CODE_KEY' => "xxxxxx",     //为加密算法提供key值 */
     'AUTH_CODE_TIME' => "600",     //key值有效时间
 );

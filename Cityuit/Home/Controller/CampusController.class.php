@@ -17,6 +17,10 @@ class CampusController extends Controller {
         S($weChat->getRevFrom().'_do','library','120');      //提醒输入图书时间预设2分钟 
     }
 
+    public function queryLibrary(){
+        $this->display();
+    }
+
     /*
      *图书馆查询接口
      */
@@ -366,18 +370,183 @@ class CampusController extends Controller {
     /*
      *处理四六级查询接口
      */
-    public function dealCet(){
+    public function dealCet($weChat){
+        $auth = replaceStr(authcode($weChat->getRevFrom(),'ENCODE', "", 1800));    //链接有效期默认30分钟
+        $cet = array(
+            "0"=>array(
+                'Title'=>'查询四六级成绩',
+                'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/cet1.png',
+                'Url'=> $_SERVER['HTTP_HOST'].U("Campus/queryCetView?auth=$auth")
+            ),
+            "1"=>array(
+                'Title'=>'准考证号怕忘了？点我',
+                'Url'=> $_SERVER['HTTP_HOST'].U("Campus/saveCetView?auth=$auth")
+            ),
+         );
+        $weChat->news($cet)->reply();
     }
 
     /*
-     *查询四级
+     *保存四级页面
+     */
+    public function saveCetView(){
+        $authGet = I('auth','');  
+        $auth = replaceStr($authGet, false);  //将替换的字符换回来
+        $openidVal = authcode($auth,'DECODE');   //只有带openidVal请求才是有效的，并且openidVal是有时效的加密
+        if($openidVal){
+            $this->assign('openid', $openidVal);     //已经保存过的准考证号
+            $this->assign('auth',$authGet);   //用于跳转到查询页面链接使用
+            $this->assign('zkzh',$this->getAllZkzh($openidVal));     //已经保存过的准考证号
+            $this->display();
+        }else{
+            $this->assign('error','链接超时失效，请重新获取。');
+            $this->display('Login:linkError');
+        } 
+    }
+
+    /*
+     *保存四级考号
+     *注意：保存考号，不根据学号，所以一个微信号可以保存多个考号，根据openid查
+     */
+    public function saveCet(){
+        $name = I('name',''); 
+        $zkzh = I('zkzh','');
+        $openid = I('openid','');
+        if(!$this->isZkzh($name, $zkzh)){
+            echo '201';    
+        }else if($this->hasSave($name, $zkzh, $openid)){    //同样的信息已经保存，
+            echo '300';
+        }else{
+            $cet = array(
+                "name" => $name,
+                "zkzh" => $zkzh,
+                "openid" => $openid,
+            );
+            $Savecet = M('Savecet');
+            $result = $Savecet->data($cet)->add();
+            if(!$result){
+                echo '500';   //保存出错
+            }else{
+                echo '200';   //保存成功
+            }
+        }
+    }
+
+    /*
+     *获取保存的所有准考证号
+     */
+    public function getAllZkzh($openid){
+        $Savecet = M('Savecet');
+        $where['openid'] = $openid;
+        $zkzhAll = $Savecet->where($where)->select();
+        return $zkzhAll;
+    }
+
+    /*
+     *验证准考证号是否正确
+     *姓名全中文，准考证号15位数字
+     */
+    public function isZkzh($name, $zkzh){
+        if(!eregi("[^\x80-\xff]","$name")){  //全是中文
+            return preg_match("/^[0-9]{15}$/",$zkzh) ? true : false;
+        }else{
+            return false;
+        }
+
+    }
+
+    /*
+     *查询是否已经保存
+     */
+    public function hasSave($name, $zkzh, $openid){
+        $Savecet = M('Savecet');
+        $where['name'] = $name;
+        $where['zkzh'] = $zkzh; 
+        $where['openid'] = $openid;
+        $cet = $Savecet->where($where)->find();
+        if($cet){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /*
+     *查询四级页面
+     */
+    public function queryCetView(){
+        $authGet = I('get.auth','');  
+        $auth = replaceStr($authGet, false);  //将替换的字符换回来
+        $openidVal = authcode($auth,'DECODE');   //只有带openidVal请求才是有效的，并且openidVal是有时效的加密
+        if($openidVal){
+            $this->assign('auth',$authGet);
+            $this->assign('zkzh',$this->getAllZkzh($openidVal));     //已经保存过的准考证号
+            $this->display();
+        }else{
+            $this->assign('error','链接超时失效，请重新获取。');
+            $this->display('Login:linkError');
+        } 
+    }
+
+    /*
+     *查询四级处理
      */
     public function queryCet(){
-        $this->display();
+        $name = I('name',''); 
+        $zkzh = I('zkzh','');
+        $score = $this->getCet($name, $zkzh);   //先从数据库查
+        if($score){
+            $arr = json_decode($score, true);
+            echo '200,'.$arr['result']['name'].','.$arr['result']['school'].','.$arr['result']['type'].','.$arr['result']['num'].','.$arr['result']['time'].','.$arr['score']['totleScore'].','.$arr['score']['tlScore'].','.$arr['score']['ydScore'].','.$arr['score']['xzpyScore'].',';
+        }else{
+            $student = array(     
+                'name'=>$name,
+                'zkzh'=>$zkzh,
+            );      
+            $resultJson = http_post(C('QUERYCET_LINK'),$student);
+            $arr = json_decode($resultJson, true);
+            if($arr['status'] == '201'){
+                echo '201,';
+            }else if($arr['status'] == '200'){
+                $this->setCet($name, $zkzh, json_encode($arr, JSON_UNESCAPED_UNICODE));
+                echo '200,'.$arr['result']['name'].','.$arr['result']['school'].','.$arr['result']['type'].','.$arr['result']['num'].','.$arr['result']['time'].','.$arr['score']['totleScore'].','.$arr['score']['tlScore'].','.$arr['score']['ydScore'].','.$arr['score']['xzpyScore'].',';
+            }else{
+                echo '501,';
+            }
+        }
     }
+
+    /*
+     *从数据库拿成绩
+     */
+    public function getCet($name, $zkzh){
+        $Querycet = M('Querycet');
+        $where['name'] = $name;
+        $where['zkzh'] = $zkzh;
+        $score = $Querycet->where($where)->getField('score');
+        if($score){
+            return $score;
+        }else{
+            return false;
+        }
+
+    }
+
+    /*
+     *数据库保存四六级成绩
+     */
+    public function setCet($name, $zkzh, $score){
+        $Querycet = M('Querycet');
+        $data['name'] = $name;
+        $data['zkzh'] = $zkzh;
+        $data['score'] = $score;
+        $Querycet->add($data);
+    }
+
 
     /*
      *四六级爬虫接口
+     *该接口因为新浪云IP被限制，所以无法使用
      */
     public function httpGetCet(){
         header("content-Type: text/html; charset=utf-8");
