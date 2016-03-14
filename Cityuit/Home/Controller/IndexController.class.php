@@ -6,12 +6,11 @@ class IndexController extends Controller {
     public function index(){
        if(isset($_GET["signature"])){   //默认为微信服务器发送的请求
             $weChat = new WeChatApi();
-            $weChat->valid();  //每次请求都验证,可以省去
+            /* $weChat->valid();  //每次请求都验证,可以省去 */
             $type = $weChat->getRev()->getRevType();
             switch($type) {
                 case WeChatApi::MSGTYPE_TEXT:
                     A('Text')->dealText($weChat);
-                    //判断当前操作
                     exit;
                     break;
                 case WeChatApi::MSGTYPE_IMAGE:
@@ -19,8 +18,6 @@ class IndexController extends Controller {
                     exit;
                     break;
                 case WeChatApi::MSGTYPE_VOICE:
-                    /* $content = $weChat->getRevContent(); */
-                    /* $weChat->text($content)->reply(); */
                     A('Text')->dealText($weChat, 1);
                     exit;
                     break;
@@ -44,7 +41,7 @@ class IndexController extends Controller {
                     $event = $weChat->getRevEvent();
                     if($event == WeChatApi::EVENT_SUBSCRIBE){
                         //新用户关注
-                        $weChat->text("欢迎关注！")->reply();
+                        A('Help')->dealHelp($weChat, 1);
                     }else if($event == WeChatApi::EVENT_MENU_CLICK){
                         //自定义菜单按钮
                         $eventKey = $weChat->getRevEventKey();

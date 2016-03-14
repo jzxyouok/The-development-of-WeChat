@@ -20,9 +20,17 @@ class HelpController extends Controller {
 
     /*
      *帮助提示
+     *@param $time=0 表示直接返回帮助，$tiem=1 表示关注返回帮助
      */
-    public function dealHelp($weChat){
-        $weChat->text("帮助详情")->reply();
+    public function dealHelp($weChat, $time = 0){
+        $mess = " 回复【bd】绑定学号\n 回复【jc】解除绑定\n 回复【信息更新】信息更新\n 回复【成绩】查询成绩\n 回复【课表】查询今日课表\n 回复【明天】查询明天课表\n 回复【后天】查询后天课表\n 回复【周课表】查询周课表\n 回复【自习】查询当前空教室\n 回复【查自习】查询空教室\n 回复【cet】查询四六级\n 回复【图书】查询图书馆图书\n 回复【考试】查询考试时间\n 回复【天气】查询天气预报\n 回复【快递】查询快递信息\n 回复【微信墙】进入微信墙\n 回复【游戏】玩小游戏\n 回复【盒子】查看城院盒子\n ";
+        if($time == 1){
+            $backMessage = "欢迎关注城院小助手！[愉快]\n\n".$mess;
+        }else{
+            $backMessage = "你是不是想说\n\n".$mess;
+        }
+        $weChat->text($backMessage)->reply();
+        exit;
     }
     /*
      *接收更新信息控制，提示

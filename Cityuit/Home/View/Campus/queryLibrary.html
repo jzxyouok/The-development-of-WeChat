@@ -32,7 +32,7 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a href="__APP__">关于我们</a>
+                    <li><a href="/index.php">关于我们</a>
                     </li>
                 </ul>
             </div>
@@ -41,68 +41,33 @@
 
     <div class="container-fluid">
         <div class="panel panel-default">
-          <php>
-            $sql = "SELECT * FROM tp_library where booktitle = '电脑办公速学教程'";
-            $rs = mysql_query($sql);
-            $row = mysql_fetch_array($rs, MYSQL_NUM);
-            echo $row[1];
-            $d = strtotime($tm);
-          </php>
-                <table class="table">
-                <tbody>
-                    <tr>
-                      <td>书名：Java程序开发教程<br/>作者：周建军等主编<br/>出版社：人民日报出版社<br/>出版时间：2015年11月<br/>藏书位置：三楼南</td>
-                    </tr>
-                </tbody>
+            <table class="table">
+               <volist name="book" id="zo" empty="没有查询记录">
+                   <tr>
+                     <th>书名：<{$zo.name}></th>
+                   </tr>
+                   <tr>
+                     <td>作者：<{$zo.author}>
+                       <br />出版社：<{$zo.press}>
+                       <br />出版时间：<{$zo.date}>年
+                       <br />藏书位置：<{$zo.location}> <{$zo.call}>
+                     </td>
+                   </tr>
+               </volist>
             </table>
         </div>
-        <!--下面是分页部分-->
-        <ul class="pagination">
-            <?php
-                global $total;
-                global $perNumber;
-                global $p;
-                $max_p = ceil($total/$perNumber);
-                if($p==1){
-                        echo"<li class='disabled'><a href='#'>&laquo;前一页</a>
-                        </li>";
-                    }else{
-                        $pp = $p - 1;
-                        echo"<li><a href='?p=$pp'>&laquo;前一页</a>
-                        </li>";
-                    }
-
-                for($it=1;$it<=5;$it=$it+1){
-                    if($p==$it){
-                        echo"<li class='active'><a href='?p=$it'>$it</a>
-                        </li>";
-                    }else{
-                        if($it>$max_p){
-                            echo"<li class='disabled'><a href='#'>$it</a>
-                            </li>";
-                        }else{
-                            echo"<li><a href='?p=$it'>$it</a>
-                            </li>";
-                        }
-                    }
-                }
-
-                if($p>=$max_p){
-                    echo"<li class='disabled'><a href='#'>&raquo;后一页</a>
-                    </li>";
-                }else{
-                    $np = $p + 1;
-                    echo"<li><a href='?p=$np'>&raquo;后一页</a>
-                    </li>";
-                }
-            ?>
-        </ul>
+        <!--<1!--下面是分页部分--1>-->
+        <!--<ul class="pagination">-->
+        <!--  <if condition="$p eq 1 "><li class='disabled'><a href='#'>&laquo;前一页</a> </li>-->
+        <!--  <else /> <li><a href='?p=<{$p}>-1'>&laquo;前一页</a> </li>-->
+        <!--  </if>-->
+        <!--</ul>-->
     </div>
     <div class="container">
         <div class="row">
             <div id="footer" class="span12">
                 <p>♥ Do have faith in what you're doing.</p>
-                <p>Producted by <a href="__APP__">城市学院小助手</a> </p>
+                <p>Producted by <a href="/index.php">城市学院小助手</a> </p>
             </div>  
         </div>
     </div>

@@ -5,9 +5,8 @@ use Think\Controller;
  *第一排按钮，个人查询控制实现
  */
 class StudentsController extends Controller {
-    public function show(){
-        echo 'nihao';
-        /* $students = D('Students'); */
+    public function index(){
+
     }
 
     /*
@@ -595,7 +594,14 @@ class StudentsController extends Controller {
             $timeNow = time() - strtotime(date("Y-m-d"));   //现在时间。
             /* $timeNow = strtotime("2016-03-11 11:40:00") - strtotime('2016-03-11');   //现在时间。 */
             if($timeNow < 29100 || $timeNow > 73500 || ($timeNow > 42600 && $timeNow < 48600)){   //早上，午饭，晚上时间
-                $this->showEmptyroom($weChat, $JX, $SY);     //将数据传给显示模版
+                if($emptyArr = json_decode(S('empty_'.$class), true)){     //先从缓存获取，如果有直接发送
+                    $this->showEmptyroom($weChat, $emptyArr, $classJX);     //将数据传给显示模版
+                }else{
+                    //缓存都没有教室的课的信息
+                    $emptyArr = $this->formatEmptyroom($JX, $SY);         //获取格式化后的数据
+                    S('empty_'.$class, json_encode($emptyArr), 86400);    //默认缓存一天，但是12点自动清空
+                    $this->showEmptyroom($weChat, $emptyArr);     //将数据传给显示模版
+                }
             }else{
                 $week = $this->calcWeek();    //当前周
                 $day = date('w',strtotime(date("Y-m-d")));
@@ -603,16 +609,23 @@ class StudentsController extends Controller {
                 $classJX = substr($class,0,1);   //获取教学楼的上哪节课
                 $classSY = substr($class,2,1);   //获取实验楼的上哪节课
                 if($classJX == $classSY){    //如果查寻时间教学楼和实验楼小节数一样，查一次即可
-                    $roomJX = $roomSY = $this->backClassroom($week, $day, $classJX);
-                    $roomArr = $this->assortment($roomJX);
-                    $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教室减去上课的教室
-                    $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);
-                    $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
+                    if($emptyArr = json_decode(S('empty_'.$classJX), true)){     //先从缓存获取，如果有直接发送
+                        $this->showEmptyroom($weChat, $emptyArr, $classJX);     //将数据传给显示模版
+                    }else{
+                        $roomJX = $roomSY = $this->backClassroom($week, $day, $classJX);
+                        $roomArr = $this->assortment($roomJX);
+                        $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教室减去上课的教室
+                        $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);
+                        $emptyArr = $this->formatEmptyroom($emptyJXArr, $emptySYArr);         //获取格式化后的数据
+                        S('empty_'.$classJX, json_encode($emptyArr), 86400);    //默认缓存一天，但是12点自动清空
+                        $this->showEmptyroom($weChat, $emptyArr);     //将数据传给显示模版
+                    }
                 }else if($classSY == 0){     //中午存在某时刻实验楼没有课，教学楼有课
                     $roomJX = $this->backClassroom($week, $day, $classJX);
                     $roomArr = $this->assortment($roomJX);    //只取教学楼的科
                     $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //只取教学楼的课
-                    $this->showEmptyroom($weChat, $emptyJXArr, $SY);     //将数据传给显示模版，实验楼没课所以直接给全部
+                    $emptyArr = $this->formatEmptyroom($emptyJXArr, $SY);         //获取格式化后的数据
+                    $this->showEmptyroom($weChat, $emptyArr);     //将数据传给显示模版
                 }else{
                     //因为实验课和教学课上课时间不同，所以分开处理。
                     //获取教学楼上课的教室。
@@ -624,17 +637,44 @@ class StudentsController extends Controller {
                     $roomArr = $this->assortment($roomSY);
                     $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);     //实验楼课
 
-                    $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr);     //将数据传给显示模版
+                    $emptyArr = $this->formatEmptyroom($emptyJXArr, $emptySYArr);         //获取格式化后的数据
+                    $this->showEmptyroom($weChat, $emptyArr);     //将数据传给显示模版
                 }
             }
         }else{
-            $week = $this->calcWeek();    //当前周
-            $day = date('w',strtotime(date("Y-m-d")));
-            $roomJX = $roomSY = $this->backClassroom($week, $day, $class);
-            $roomArr = $this->assortment($roomJX);
-            $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教室减去上课的教室
-            $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);
-            $this->showEmptyroom($weChat, $emptyJXArr, $emptySYArr, $class);     //将数据传给显示模版
+            if($emptyArr = json_decode(S('empty_'.$class), true)){     //先从缓存获取，如果有直接发送
+                $this->showEmptyroom($weChat, $emptyArr, $class);     //将数据传给显示模版
+            }else{
+                $week = $this->calcWeek();    //当前周
+                $day = date('w',strtotime(date("Y-m-d")));
+                $roomJX = $roomSY = $this->backClassroom($week, $day, $class);
+                $roomArr = $this->assortment($roomJX);
+                $emptyJXArr = $this->array_diff_fast($JX, $roomArr['JX']);    //函数用于取差，所有教室减去上课的教室
+                $emptySYArr = $this->array_diff_fast($SY, $roomArr['SY']);
+                $emptyArr = $this->formatEmptyroom($emptyJXArr, $emptySYArr);         //获取格式化后的数据
+                /*
+                 *小节数相同的课的空教室缓存处理
+                 *如果已经有缓存，返回该小节数据
+                 *如果不存在缓存，返回false，调用处进行缓存处理
+                 *缓存会在每天12点清空，继续开始存取新一天的数据
+                 */
+                S('empty_'.$class, json_encode($emptyArr), 86400);    //默认缓存一天，但是12点自动清空
+                $this->showEmptyroom($weChat, $emptyArr, $class);     //将数据传给显示模版
+            }
+        }
+    }
+    public function getarr(){
+        $class = I('in');
+        $emptyArr = S('empty_'.$class);
+        dump(json_decode($emptyArr));
+    }
+
+    /*
+     *删除空教室缓存接口，每天24点定时执行
+     */
+    public function delEmpty(){
+        for($i=0; $i<13; $i++){
+            S('empty_'.$i,null);
         }
     }
 
@@ -663,15 +703,18 @@ class StudentsController extends Controller {
     } 
 
     /*
-     *负责发送自习室内容的模版
-     *@param array $JX 教学楼空教室
-     *@param array $SY 实验楼空教室
+     *负责自习室格式化，分类
      */
-    public function showEmptyroom($weChat, $JX, $SY, $class = 0){
+    public function formatEmptyroom($JX, $SY){
         $JX = array_merge($JX);     //经过筛选的教室，可能下标没有对齐，导致for循环终止，
         $SY = array_merge($SY);     //array_merge传入一个参数时会将下标重新排序
         for($i=0 ; $i<count($JX) ; $i++){ 
-            $JXJS .= $JX[$i]." ";
+            $area = substr($JX[$i],0,1);   //获取教学楼1区和2区
+            if($area == '1'){
+                $JXJS1 .= $JX[$i]." ";   //1区
+            }else if($area == '2'){
+                $JXJS2 .= $JX[$i]." ";
+            }
         }
         for($i=0 ; $i<count($SY) ; $i++){
             if(strpos($SY[$i], "机房") !== false){    //该教室为教学楼机房
@@ -684,9 +727,11 @@ class StudentsController extends Controller {
                 $SYJS .= $SY[$i]." ";
             }
         }
-
-        $emptyJXJS = array(
-            'Title'=>"教学楼：\n".$JXJS,
+        $emptyJXJS1 = array(
+            'Title'=>"教学楼1区：\n".$JXJS1,
+        );
+        $emptyJXJS2 = array(
+            'Title'=>"教学楼2区：\n".$JXJS2,
         );
         $emptySYJS = array(
             'Title'=>"实验楼教室：\n".$SYJS,
@@ -700,6 +745,20 @@ class StudentsController extends Controller {
         $emptySYYYS = array(
             'Title'=>"实验楼语音室：\n".$SYYYS,
         );
+        $emptyArr['JXJS1'] = $emptyJXJS1;
+        $emptyArr['JXJS2'] = $emptyJXJS2;
+        $emptyArr['SYJF'] = $emptySYJF;
+        $emptyArr['SYYYS'] = $emptySYYYS;
+        $emptyArr['SYJT'] = $emptySYJT;
+        $emptyArr['SYJS'] = $emptySYJS;
+        return $emptyArr;    //返回格式化二维数组
+    }
+
+    /*
+     *负责发送自习室内容的模版
+     *@param array $emptyArr 经过格式化后的所有空教室
+     */
+    public function showEmptyroom($weChat, $emptyArr, $class = 0){
         //发送装载
         $emptyMes = Array();
         if($class != 0){
@@ -715,11 +774,12 @@ class StudentsController extends Controller {
             'Title'=>"回复【查自习】查看任意节课空教室",
         );
         $emptyMes[] = $top;
-        $emptyMes[] = $emptyJXJS;
-        $emptyMes[] = $emptySYJS;
-        $emptyMes[] = $emptySYJF;
-        $emptyMes[] = $emptySYJT;
-        $emptyMes[] = $emptySYYYS;
+        $emptyMes[] = $emptyArr['JXJS1'];
+        $emptyMes[] = $emptyArr['JXJS2'];
+        $emptyMes[] = $emptyArr['SYJS'];
+        $emptyMes[] = $emptyArr['SYJF'];
+        $emptyMes[] = $emptyArr['SYJT'];
+        $emptyMes[] = $emptyArr['SYYYS'];
         $emptyMes[] = $end;
         $weChat->news($emptyMes)->reply();
     }

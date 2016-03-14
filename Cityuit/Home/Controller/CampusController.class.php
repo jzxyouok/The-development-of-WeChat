@@ -6,7 +6,6 @@ use Think\Controller;
  */
 class CampusController extends Controller {
     public function index(){
-        /* $this->display(); */
     }
 
     /*
@@ -17,35 +16,38 @@ class CampusController extends Controller {
         S($weChat->getRevFrom().'_do','library','120');      //提醒输入图书时间预设2分钟 
     }
 
-    public function queryLibrary(){
-        $this->display();
+    /*
+     *收到图书关键字信息处理
+     */
+    public function dealLibrary($weChat, $name){
+        $book = array(
+            "0"=>array(
+                'Title'=>$name.' 查询结果',
+                'Description'=>"点击查看查询结果，输入【exit】退出查询操作",
+                'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/library.jpg',
+                'Url'=> $_SERVER['HTTP_HOST'].U("Campus/queryLibrary?name=$name")
+            ),
+         );
+        $weChat->news($book)->reply();
     }
 
     /*
-     *图书馆查询接口
+     *图书馆图书查询处理
      */
-    public function checkLibrary(){
-/* $query_sql = "SELECT * FROM books where upper(book_name) like upper('%".$book_name."%') or upper(author_name) like upper('%".$book_name."%') LIMIT  $offset , $pagesize"; */
-        $Library=M('Library');
-        $where['booktitle']=array('like',(String)$bookKey.'%');
-        $where['booktitle']=array('like','%'.(String)$bookKey);
-        $where['booktitle']=array('like','%'.(String)$bookKey.'%');
-        $Library->where($where)->select();
-        echo $Library->getLastSql();
-        /* $weChat->text($Library->getLastSql())->reply(); */
-        exit;
-        /* $url = "http://m.kuaidi100.com/index_all.html?postid=".$expressid; */
-        /* $title = '快递单号：'.$expressid; */
-        /* $ex = array( */
-        /*     "0"=>array( */
-        /*         'Title'=> $title, */
-        /*         'Description'=>"为了方便查询，自动记录单号。\n\n查询其它快递单号，回复【快递】", */
-        /*         'PicUrl'=> 'http://'.$_SERVER['HTTP_HOST'].'/Public/Image/kuaidi.png', */
-        /*         'Url'=> $url, */
-        /*     ), */
-        /*  ); */
-        /* $weChat->news($ex)->reply(); */
-        /* S($weChat->getRevFrom().'_do',null);   //删除操作缓存 */
+    public function queryLibrary(){
+        $name = I("name", "");
+        $p = I('p') ? I('p') : 2;
+        $book = array(     
+            'book_name'=>$name,
+        );      
+        $resultJson = http_post(C('QUERYLIBRARY_LINK'),$book);
+        $bookArr = json_decode($resultJson, true);
+        /* dump($bookArr); */
+        $this->assign('book',$bookArr);     //已经保存过的准考证号
+        $this->assign('total', count($bookArr));
+        $this->assign('per', 35);
+        $this->assign('p', $p);
+        $this->display();
     }
 
     /*

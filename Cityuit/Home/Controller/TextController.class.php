@@ -29,20 +29,8 @@ class TextController extends Controller {
         "weather"=>"A('Campus')->dealWeather",
         "findempty"=>"A('Students')->askClass",
         "empty"=>"A('Students')->dealSelfRoom",
-        "test"=>"assistor_test",
-        "tscx"=>"assistor_lib",
-        "mxp"=>"assistor_gift",
-        "news"=>"assistor_news",
-        "notice"=>"assistor_notice",
-        "cet"=>"assistor_cet",
-        "joke"=>"assistor_joke",
-        "qbst"=>"assistor_canteen_all",
-        "teacherbd"=>"assistor_teacher_bind",
-        "general_course"=>"assistor_general_course",
-        "vod"=>"assistor_vod",
-        "statistic_st"=>"assistor_count_st",
-        "order_food"=>"assistor_order_food",
-        "random_food"=>"assistor_random_food",
+        "tscx"=>"A('Campus')->askLibrary",
+        "cet"=>"A('Campus')->dealCet",
     );
 
     /*
@@ -60,7 +48,7 @@ class TextController extends Controller {
             A('Help')->exitHelp($weChat);               //如果exit判断在后面，查图书的时候将无法退出操作。
         }
         if(S($weChat->getRevFrom().'_do') == 'library') {   //为什么图书查询的动作要提前，避免和功能同名的图书没办法查询。
-            A('Campus')->checkLibrary($weChat, $mesText);
+            A('Campus')->dealLibrary($weChat, $mesText);
         }
 
         $operate=$this->reduce_route($mesText);
@@ -80,6 +68,7 @@ class TextController extends Controller {
             switch ( S($weChat->getRevFrom().'_do') ) {
             case 'emptyroom':
                 A('Students')->checkClass($weChat, $mesText);
+                break;
             case 'shitang':
                 A('Campus')->dealShitang($weChat, $mesText);
                 break;
@@ -101,18 +90,18 @@ class TextController extends Controller {
                 if($mesText == '确认'){
                     A('Help')->dealUpdate($weChat);
                 }else{
-                    $weChat->text("有疑问，请输入【帮助】查询。")->reply();
+                    A('Help')->dealHelp($weChat);
                 }
                 break;
             case 'unbind':
                 if($mesText == '确认'){
                     A('Login')->doLogout($weChat);  //调用解绑方法
                 }else{
-                    $weChat->text("有疑问，请输入【帮助】查询。")->reply();
+                    A('Help')->dealHelp($weChat);
                 }
                 break;
             default:
-                $weChat->text("有疑问，请输入【帮助】查询。")->reply();
+                A('Help')->dealHelp($weChat);
             }
         }
     }
@@ -140,7 +129,7 @@ class TextController extends Controller {
         if(strtolower($form_Content)=="exit" || strtolower($form_Content)=="q" || $form_Content=="退出"){
             return array("exit");
         }
-        if( $form_Content=="绑定" || strtolower($form_Content)=="bd" || $form_Content=="绑定帐号" ){
+        if( $form_Content=="绑定" || strtolower($form_Content)=="bd" || $form_Content=="绑定帐号" || $form_Content=="绑定学号" ){
             return array("bd");
         }
         if( $form_Content=="解除" || $form_Content=="取消绑定" || $form_Content=="解除绑定" || strtolower($form_Content)=="jc" ){
@@ -179,17 +168,11 @@ class TextController extends Controller {
         if( $form_Content=="查自习" ){
             return array("findempty");
         }
-        if(strtolower($form_Content)=="test"){
-            return array("test");
-        }
-        if( $form_Content=="图书" || strtolower($form_Content)=="tscx" || $form_Content=="图书馆" || $form_Content=="书籍查询" || $form_Content=="图书查询"){
-            return array("tscx");
-        }
         if(strtolower($form_Content)=="cet" || $form_Content=="四六级" || $form_Content=="四六级成绩"|| $form_Content=="四级" || $form_Content=="六级"){
             return array("cet");
         }
-        /* if( $form_Content=="通识课" || $form_Content=="选修课" || $form_Content=="选修" ){ */
-        /*     return array("general_course"); */
-        /* } */
+        if( $form_Content=="图书" || strtolower($form_Content)=="ts" || strtolower($form_Content)=="tscx" || $form_Content=="图书馆" || $form_Content=="书籍查询" || $form_Content=="图书查询"){
+            return array("tscx");
+        }
     }
 }
