@@ -30,7 +30,7 @@ return array(
 
     /* 'WEB_HOST' => 'http://2.cityuit.sinaapp.com' */
 
-    //自定义常量
+    //自定义常量 
 
     'START_DATE_OF_SCHOOL' => '2016-3-6',   //开学前一天日期，每学期需要手动修改
 
