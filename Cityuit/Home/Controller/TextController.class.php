@@ -147,7 +147,7 @@ class TextController extends Controller {
         if($form_Content=="成绩" || stristr($form_Content,"成绩") || strtolower($form_Content)=="cj"){
             return array("cj", 1);
         }
-        if(strtolower($form_Content)=="st" || $form_Content=="食堂" || $form_Content=="食堂菜单" || $form_Content=="菜单"){
+        if(strtolower($form_Content)=="st" || $form_Content=="食堂" || $form_Content=="订餐" || $form_Content=="食堂菜单" || $form_Content=="菜单"){
             return array("st");
         }
         if( $form_Content=="考试时间" || $form_Content=="考试" || strtolower($form_Content)=="ks" || strtolower($form_Content)=="exam" ){

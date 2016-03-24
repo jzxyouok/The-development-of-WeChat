@@ -173,10 +173,10 @@ class StudentsController extends Controller {
         for($i=0 ; $i<count($scoreArr) ; $i++){
             $have = true;
             if($name != $scoreArr[(String)$i]['课程名称']){
-                $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']."\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."\n\n";
+                $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']."\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."    课程学分：".$scoreArr[(String)$i]['学分']."\n\n";
                 $name = $scoreArr[(String)$i]['课程名称'];
             }else{
-                $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']." 【重修】\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."\n\n";
+                $scoreString .= "课程名称：".$scoreArr[(String)$i]['课程名称']." 【重修】\n平时成绩：".$scoreArr[(String)$i]['平时成绩']."    期末成绩：".$scoreArr[(String)$i]['期末成绩']."\n课程成绩：".$scoreArr[(String)$i]['课程成绩']."    课程学分：".$scoreArr[(String)$i]['学分']."\n\n";
             }
         }
         if(!$have){
@@ -283,7 +283,7 @@ class StudentsController extends Controller {
                 'Title'=>'抱歉：出问题了 （┬＿┬）↘',
             ),
             "1"=>array(
-                'Title'=>"建议再试一次，也可以试试【贴心帮助】->【信息更新】\n如果不能解决问题希望可以加入QQ308407868反馈群告诉给我们，我们会为大家尽快处理，谢谢支持。",
+                'Title'=>">网络延迟：建议再试一次\n>密码已修改：试试【信息更新】\n>校网处于维护：等待:(\n\n如果都无法解决希望可以加入QQ群308407868反馈，我们会为大家尽快处理，谢谢支持。",
             ),
         );
         $weChat->news($class)->reply();
